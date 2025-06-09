@@ -1,0 +1,268 @@
+package com.smartroom.allocation.controller;
+
+import com.smartroom.allocation.dto.BookingResponseDTO;
+import com.smartroom.allocation.entity.Booking;
+import com.smartroom.allocation.entity.User;
+import com.smartroom.allocation.entity.Room;
+import com.smartroom.allocation.service.BookingService;
+import com.smartroom.allocation.service.RoomService;
+import com.smartroom.allocation.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/bookings")
+@CrossOrigin(origins = "*")
+public class BookingController {
+
+    @Autowired
+    private BookingService bookingService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private RoomService roomService;
+
+    /**
+     * Create a new booking
+     * @param booking Booking details
+     * @param auth Authentication object (contains current user info)
+     * @return Created booking in standardized format
+     */
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createBooking(@RequestBody Booking booking,
+                                                             Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 1);
+                response.put("Message", "User not found");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            booking.setUser(currentUser.get());
+            Booking createdBooking = bookingService.createBooking(booking);
+
+            response.put("Status", 0);
+            response.put("Message", "Booking created successfully");
+            response.put("Data", new BookingResponseDTO(createdBooking));
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("Status", 1);
+            response.put("Message", e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("Status", 1);
+            response.put("Message", "Failed to create booking: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    @PostMapping("/by-room-number/{roomNumber}")
+    public ResponseEntity<Map<String, Object>> createBookingByRoomNumber(@PathVariable String roomNumber,
+                                                                         @RequestBody Booking booking,
+                                                                         Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "User not found");
+                response.put("Data", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Optional<Room> roomOpt = roomService.findByRoomNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found");
+                response.put("Data", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            booking.setUser(currentUser.get());
+            booking.setRoom(roomOpt.get());
+
+            Booking createdBooking = bookingService.createBooking(booking);
+
+            response.put("Status", 1);
+            response.put("Message", "Booking created successfully");
+            response.put("Data", new BookingResponseDTO(createdBooking));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Error: " + e.getMessage());
+            response.put("Data", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Cancel a booking
+     * @param bookingId Booking ID to cancel
+     * @param auth Authentication object
+     * @return Updated booking
+     */
+    @PutMapping("/{bookingId}/cancel")
+    public ResponseEntity<Booking> cancelBooking(@PathVariable Long bookingId,
+                                                 Authentication auth) {
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Booking cancelledBooking = bookingService.cancelBooking(bookingId, currentUser.get().getId());
+            return ResponseEntity.ok(cancelledBooking);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get current user's bookings
+     * @param auth Authentication object
+     * @return List of user's bookings in standardized format
+     */
+    @GetMapping("/my-bookings")
+    public ResponseEntity<Map<String, Object>> getMyBookings(Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "User not found");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            List<Booking> bookings = bookingService.getUserBookings(currentUser.get());
+            List<BookingResponseDTO> bookingDTOs = bookings.stream()
+                    .map(BookingResponseDTO::new)
+                    .collect(Collectors.toList());
+
+            response.put("Status", 1);
+            response.put("Message", "Bookings retrieved successfully");
+            response.put("Data", bookingDTOs);
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to retrieve bookings: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+    }
+
+    /**
+     * Get all current bookings (Admin only)
+     * @return List of current bookings
+     */
+    @GetMapping("/current")
+    public ResponseEntity<List<Booking>> getCurrentBookings() {
+        List<Booking> currentBookings = bookingService.getCurrentBookings();
+        return ResponseEntity.ok(currentBookings);
+    }
+
+    @GetMapping("/room/{roomId}/upcoming")
+    public ResponseEntity<Map<String, Object>> getUpcomingBookingsForRoom(@PathVariable Long roomId, Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Verify user authentication
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "User not found");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Fetch room from RoomService
+            Optional<Room> roomOpt = roomService.findById(roomId);
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found with id: " + roomId);
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Get upcoming bookings
+            List<Booking> bookings = bookingService.getUpcomingBookingsForRoom(roomOpt.get());
+            List<BookingResponseDTO> bookingDTOs = bookings.stream()
+                    .map(BookingResponseDTO::new)
+                    .collect(Collectors.toList());
+
+            response.put("Status", 1);
+            response.put("Message", "Upcoming bookings retrieved successfully");
+            response.put("Data", bookingDTOs);
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0 );
+            response.put("Message", "Failed to retrieve upcoming bookings: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    @GetMapping("/room-number/{roomNumber}/upcoming")
+    public ResponseEntity<Map<String, Object>> getUpcomingBookingsForRoomNumber(@PathVariable String roomNumber,
+                                                                                Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "User not found");
+                response.put("Data", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Optional<Room> roomOpt = roomService.findByRoomNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found");
+                response.put("Data", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            List<Booking> bookings = bookingService.getUpcomingBookingsForRoom(roomOpt.get());
+            List<BookingResponseDTO> bookingDTOs = bookings.stream()
+                    .map(BookingResponseDTO::new)
+                    .collect(Collectors.toList());
+
+            response.put("Status", 1);
+            response.put("Message", "Upcoming bookings retrieved successfully");
+            response.put("Data", bookingDTOs);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Error: " + e.getMessage());
+            response.put("Data", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+}
