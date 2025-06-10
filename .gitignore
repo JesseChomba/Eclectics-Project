@@ -51,7 +51,7 @@ application.properties
 application-*.properties
 
 # Database credentials
-*.env
+.env
 
 #Project structure
 structure_exports
