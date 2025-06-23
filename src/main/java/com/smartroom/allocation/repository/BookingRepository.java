@@ -1,6 +1,7 @@
 package com.smartroom.allocation.repository;
 
 import com.smartroom.allocation.entity.Booking;
+import com.smartroom.allocation.entity.BookingStatus;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "AND b.status = 'CONFIRMED' AND b.startTime > :currentTime")
     List<Booking> findUpcomingBookingsForRoom(@Param("room") Room room,
                                               @Param("currentTime") LocalDateTime currentTime);
+
+    // Find bookings by status and updatedAt before a threshold
+    @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.updatedAt < :threshold")
+    List<Booking> findByStatusAndUpdatedAtBefore(@Param("status") BookingStatus status,
+                                                 @Param("threshold") LocalDateTime threshold);
 }

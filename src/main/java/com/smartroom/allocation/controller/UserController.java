@@ -23,8 +23,8 @@ public class UserController {
     private UserService userService;
 
     /*
-    * Getting all the users available in Db
-    * Only available for Admins*/
+     * Getting all the users available in Db
+     * Only available for Admins*/
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getAllUsers(Authentication auth) {
@@ -90,15 +90,33 @@ public class UserController {
      * @param user User details
      * @return Registered user
      */
+//    @PostMapping("/register")
+//    public ResponseEntity<User> registerUser(@RequestBody User user) {
+//        try {
+//            User registeredUser = userService.registerUser(user);
+//            // Don't return password in response
+//            registeredUser.setPassword(null);
+//            return ResponseEntity.ok(registeredUser);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {
+        Map<String, Object> response = new HashMap<>();
         try {
             User registeredUser = userService.registerUser(user);
-            // Don't return password in response
-            registeredUser.setPassword(null);
-            return ResponseEntity.ok(registeredUser);
+            response.put("Status", 1);
+            response.put("Message", "User registered successfully");
+            response.put("Data", registeredUser);
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

@@ -22,6 +22,9 @@ public class UserService {
     @Autowired
     private BookingRepository bookingRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Register a new user
      * @param user User to register
@@ -38,12 +41,13 @@ public class UserService {
 
         // Encode password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        return userRepository.save(user);
+        User savedUser= userRepository.save(user);
+        notificationService.sendWelcomeEmail(savedUser); //email welcoming user
+        return savedUser;
     }
 
     /*Get all users available
-    * for admins only*/
+     * for admins only*/
     public List<User> getAllUsers() {
 //        return userRepository.findAll();
         List<User> users = userRepository.findAll();
@@ -123,8 +127,17 @@ public class UserService {
         });
     }
 
+    //    public boolean deleteUserById(Long id) {    old implementation!
+//        if (userRepository.existsById(id)) {
+//            userRepository.deleteById(id);
+//            return true;
+//        }Old implementation
+//        return false;
+//    }
     public boolean deleteUserById(Long id) {
-        if (userRepository.existsById(id)) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            notificationService.sendDeletionNotification(userOpt.get()); // Add this
             userRepository.deleteById(id);
             return true;
         }

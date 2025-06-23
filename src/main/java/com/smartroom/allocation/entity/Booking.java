@@ -41,6 +41,10 @@ public class Booking {
     private String notes;
     private boolean recurring = false;
 
+    // ADDED: This field links all bookings in a recurring series together.
+    @Column(name = "recurring_group_id")
+    private String recurringGroupId;
+
     public Booking() {}
 
     public Booking(User user, Room room, LocalDateTime startTime, LocalDateTime endTime, String purpose) {
@@ -83,4 +87,8 @@ public class Booking {
 
     public boolean isRecurring() { return recurring; }
     public void setRecurring(boolean recurring) { this.recurring = recurring; }
+
+    // --- Getter and Setter for the new field ---
+    public String getRecurringGroupId() { return recurringGroupId; }
+    public void setRecurringGroupId(String recurringGroupId) { this.recurringGroupId = recurringGroupId; }
 }

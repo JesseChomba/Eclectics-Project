@@ -1,15 +1,21 @@
 package com.smartroom.allocation.service;
 
+import com.smartroom.allocation.dto.RecurringBookingRequest;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.BookingStatus;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.User;
 import com.smartroom.allocation.repository.BookingRepository;
+import com.smartroom.allocation.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class BookingService {
@@ -18,13 +24,16 @@ public class BookingService {
     private BookingRepository bookingRepository;
 
     @Autowired
+    private RoomRepository roomRepository; //ADDED dependency
+
+    @Autowired
     private UserService userService;
 
     @Autowired
     private NotificationService notificationService;
 
     /**
-     * Create a new booking
+     * Create a new single booking (non-recurring).
      * @param booking Booking to create
      * @return Created booking
      * @throws IllegalArgumentException if there's a conflict or invalid booking details
@@ -50,6 +59,9 @@ public class BookingService {
             throw new IllegalArgumentException("End time must be after start time");
         }
 
+        // Set Booking status to CONFIRMED
+        booking.setStatus(BookingStatus.CONFIRMED);
+
         // Save the booking
         Booking savedBooking = bookingRepository.save(booking);
 
@@ -60,6 +72,73 @@ public class BookingService {
         notificationService.sendBookingConfirmation(savedBooking);
 
         return savedBooking;
+    }
+
+    /*
+     * ADDED: Creates a series of recurring bookings based on a request, with a specified weekly interval.
+     * @param request The recurring booking details, including the interval.\
+     * @param user The user making the booking.
+     * @ return A list of the created booking objects.
+     */
+    @Transactional
+    public List<Booking> createRecurringBookings(RecurringBookingRequest request, User user) {
+        Room room = roomRepository.findByRoomNumber(request.getRoomNumber())
+                .orElseThrow(() -> new IllegalArgumentException("Room with number " + request.getRoomNumber() + " not found."));
+
+        List<Booking> newBookings = new ArrayList<>();
+        String recurringGroupId = UUID.randomUUID().toString();
+
+        int interval = (request.getIntervalWeeks() > 0) ? request.getIntervalWeeks() : 1;
+
+        LocalDate currentDate = request.getSemesterStartDate();
+        // Find the first valid day of the week on or after the start date
+        while (currentDate.getDayOfWeek() != request.getDayOfWeek()) {
+            currentDate = currentDate.plusDays(1);
+        }
+
+        // Loop from the first valid day, jumping by the specified week interval
+        while (!currentDate.isAfter(request.getSemesterEndDate())) {
+            LocalDateTime startTime = LocalDateTime.of(currentDate, request.getStartTime());
+            LocalDateTime endTime = LocalDateTime.of(currentDate, request.getEndTime());
+
+            // Check for conflicts for this specific instance
+            Long conflicts = bookingRepository.countConflictingBookings(room, startTime, endTime);
+            if (conflicts > 0) {
+                throw new IllegalArgumentException("A conflict was found for the booking on " + currentDate +
+                        ". The entire recurring booking series has been cancelled to ensure consistency.");
+            }
+
+            // Create a new booking instance
+            Booking booking = new Booking();
+            booking.setUser(user);
+            booking.setRoom(room);
+            booking.setStartTime(startTime);
+            booking.setEndTime(endTime);
+            booking.setPurpose(request.getPurpose());
+            booking.setNotes(request.getNotes());
+            booking.setRecurring(true);
+            booking.setRecurringGroupId(recurringGroupId);
+            booking.setStatus(BookingStatus.CONFIRMED);
+
+            newBookings.add(booking);
+
+            // Jump to the next occurrence
+            currentDate = currentDate.plusWeeks(interval);
+        }
+
+        if (newBookings.isEmpty()) {
+            throw new IllegalArgumentException("No dates matching your criteria were found within the specified semester range.");
+        }
+        //save all booking instances to the database in as single transaction
+        List<Booking> savedBookings = bookingRepository.saveAll(newBookings);
+
+        //Update user points based on the number of bookings created
+        userService.updateUserPoints(user.getId(), savedBookings.size() * 5);
+
+        //  MODIFIED: Call the new summary notification method once for the entire series
+        notificationService.sendRecurringBookingConfirmationSummary(savedBookings);
+
+        return savedBookings;
     }
 
     /**

@@ -76,8 +76,17 @@ public class AuthController {
             response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    }
 
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("Status", 1);
+        response.put("Message", "Logout successful.");
+        response.put("Data", "");
+        response.put("Token", "");
+        return ResponseEntity.ok(response);
+    }
     // Inner classes for request/response
     public static class LoginRequest {
         private String username;

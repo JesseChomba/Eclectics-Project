@@ -1,6 +1,7 @@
 package com.smartroom.allocation.controller;
 
 import com.smartroom.allocation.dto.BookingResponseDTO;
+import com.smartroom.allocation.dto.RecurringBookingRequest;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.User;
 import com.smartroom.allocation.entity.Room;
@@ -75,6 +76,45 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+    /*
+     * ADDED: Create a new recurring booking for a semester.
+     * @param request the details of the recurrent booking.
+     * @param auth The authentication object for the current user.
+     * @return  A list of Created bookings or an error message*/
+    @PostMapping("/recurring")
+    public ResponseEntity<Map<String, Object>> createRecurringBooking(@RequestBody RecurringBookingRequest request,
+                                                                      Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<User> currentUser = userService.findByUsername(auth.getName());
+            if (!currentUser.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "User not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            List<Booking> createdBookings = bookingService.createRecurringBookings(request, currentUser.get());
+
+            List<BookingResponseDTO> bookingDTOs = createdBookings.stream()
+                    .map(BookingResponseDTO::new)
+                    .collect(Collectors.toList());
+
+            response.put("Status", 1);
+            response.put("Message", "Recurring bookings created successfully. Total bookings made: " + bookingDTOs.size());
+            response.put("Data", bookingDTOs);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to create recurring bookings: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @PostMapping("/by-room-number/{roomNumber}")
     public ResponseEntity<Map<String, Object>> createBookingByRoomNumber(@PathVariable String roomNumber,
                                                                          @RequestBody Booking booking,
