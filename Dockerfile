@@ -13,5 +13,7 @@ WORKDIR /app
 COPY --from=build /app/target/smart-room-allocation-0.0.1-SNAPSHOT.jar smart-room-allocation.jar
 # Expose the port your Spring Boot application runs on
 EXPOSE 8080
+# Set JVM Time
+ENV JAVA_OPTS="-Duser.timezone=Africa/Nairobi"
 # Run the application
 ENTRYPOINT ["java", "-jar", "smart-room-allocation.jar"]

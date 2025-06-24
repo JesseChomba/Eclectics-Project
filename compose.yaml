@@ -35,7 +35,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       #time configuration
-      SPRING_JACKSON_TIME-ZONE: Africa/Nairobi
+      SPRING_JACKSON_TIME_ZONE: Africa/Nairobi
     networks:
       - app-network
 networks:
