@@ -58,6 +58,7 @@ public class EquipmentController {
      * @return Created equipment
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Equipment> createEquipment(@Valid @RequestBody Equipment equipment) {
         try {
             Equipment createdEquipment = equipmentRepository.save(equipment);
