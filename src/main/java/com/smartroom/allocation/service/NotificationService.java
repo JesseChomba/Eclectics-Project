@@ -3,20 +3,47 @@ package com.smartroom.allocation.service;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.User;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
 
+    private static final Logger logger= LoggerFactory.getLogger(NotificationService.class);
+
     @Autowired
     private JavaMailSender mailSender;
+
+    /*
+     * Send Email to users after Equipment details have been changed after a booking
+     * has been made to update them of the changes so they're not caught unaware*/
+    @Async
+    public void sendEquipmentUpdateNotification(List<String> recipientEmails, String subject, String message){
+        try{
+            for (String email : recipientEmails){
+                MimeMessage mimeMessage= mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+                helper.setTo(email);
+                helper.setSubject(subject);
+                helper.setText(message,true);
+                mailSender.send(mimeMessage);
+                logger.info("Notification sent to {}",email);
+            }
+        } catch (MessagingException e) {
+            logger.error("Failed to send notification to {}:{}",recipientEmails,e.getMessage());
+        }
+    }
 
     /**
      * Send booking confirmation email for a single booking.
@@ -207,4 +234,6 @@ public class NotificationService {
             System.err.println("Failed to send deletion notification email: " + e.getMessage());
         }
     }
+
+
 }

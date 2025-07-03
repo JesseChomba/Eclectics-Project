@@ -26,6 +26,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Find bookings by user
     List<Booking> findByUser(User user);
 
+    //Find users with active or upcoming bookings for a specific room
+
+    List<Booking> findByRoomAndEndTimeAfter(Room room, LocalDateTime currentTime);
+
     //Count bookings by user
     int countByUser(User user);
 
