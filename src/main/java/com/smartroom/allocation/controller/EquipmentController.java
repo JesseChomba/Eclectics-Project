@@ -429,6 +429,7 @@ public class EquipmentController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional  //Added to manage the transaction
     public ResponseEntity<Map<String, Object>> deleteEquipment(@PathVariable Long id, Authentication auth) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -455,7 +456,14 @@ public class EquipmentController {
             //notify users before deletion of the equipment
             if(oldRoom !=null) {
                 notifyUsersForRoom(oldRoom, equipment.getName(), "deleted");
+
+                //***Fix for bug causing it not to delete equipment by its ID
+                //Explicitly remove the equipment from the room's collection to -
+                //update parent side of the relationship.
+                oldRoom.getEquipment().remove(equipment);
+
             }
+            //now we delete the equipment entity itself
             equipmentRepository.deleteById(id);
             response.put("Status", 1);
             response.put("Message", "Equipment deleted successfully");

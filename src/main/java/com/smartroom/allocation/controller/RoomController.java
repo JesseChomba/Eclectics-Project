@@ -193,6 +193,7 @@ public class RoomController {
      * @return Created room
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> createRoom(@RequestBody Room room, Authentication auth) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -247,6 +248,91 @@ public class RoomController {
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to update room status: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Update room details (Admin only)
+     * @param id Room ID
+     * @param roomUpdate Room details to update
+     * @return Updated room
+     * */
+    @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String,Object>> updateRoom(@PathVariable Long id, @RequestBody Room roomUpdate,Authentication auth){
+        Map<String,Object> response = new HashMap<>();
+        try{
+            if (auth == null || auth.getName() == null){
+                response.put("Status",0);
+                response.put("Message","Authentication required");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            Room updatedRoom = roomService.updateRoom(id, roomUpdate);
+            response.put("Status", 1);
+            response.put("Message", "Room updated successfully");
+            response.put("Data", new RoomResponseDTO(updatedRoom));
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
+        }catch (IllegalArgumentException e) {
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to update room: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Delete room by ID (Admin only)
+     * @param id Room ID
+     * @return Success/Failure response
+     * */
+
+    /**
+     * Delete room by ID (Admin only)
+     * @param id Room ID
+     * @return Success/failure response
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> deleteRoomById(@PathVariable Long id, Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            if (auth == null || auth.getName() == null) {
+                response.put("Status", 0);
+                response.put("Message", "Authentication required");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            boolean deleted = roomService.deleteRoomById(id);
+            if (deleted) {
+                response.put("Status", 1);
+                response.put("Message", "Room deleted successfully");
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("Status", 0);
+                response.put("Message", "Room not found with id: " + id);
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to delete room:" + e.getMessage());
             response.put("Data", "");
             response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

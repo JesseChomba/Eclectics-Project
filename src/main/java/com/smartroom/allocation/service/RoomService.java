@@ -87,4 +87,63 @@ public class RoomService {
         room.setActive(true); // Ensure new rooms are active by default
         return roomRepository.save(room);
     }
+
+    /**
+     * Update room details
+     * @param id Room ID
+     * @param roomUpdate Room details to update
+     * @return Updated room
+     */
+    public Room updateRoom(Long id, Room roomUpdate) {
+        Optional<Room> roomOpt = roomRepository.findById(id);
+        if (!roomOpt.isPresent()) {
+            throw new IllegalArgumentException("Room not found with id: " + id);
+        }
+
+        Room existingRoom = roomOpt.get();
+        // Check if room number is being updated and if it already exists
+        if (!existingRoom.getRoomNumber().equals(roomUpdate.getRoomNumber()) &&
+                roomRepository.existsByRoomNumber(roomUpdate.getRoomNumber())) {
+            throw new IllegalArgumentException("Room number already exists");
+        }
+
+        existingRoom.setRoomNumber(roomUpdate.getRoomNumber());
+        existingRoom.setName(roomUpdate.getName());
+        existingRoom.setCapacity(roomUpdate.getCapacity());
+        existingRoom.setBuilding(roomUpdate.getBuilding());
+        existingRoom.setFloor(roomUpdate.getFloor());
+        existingRoom.setLocation(roomUpdate.getLocation());
+        existingRoom.setRoomType(roomUpdate.getRoomType());
+        existingRoom.setStatus(roomUpdate.getStatus());
+        existingRoom.setActive(roomUpdate.isActive());
+
+        return roomRepository.save(existingRoom);
+    }
+
+    /**
+     * Delete room by ID
+     * @param id Room ID
+     * @return true if deleted, false if not found
+     */
+    public boolean deleteRoomById(Long id) {
+        if (roomRepository.existsById(id)) {
+            roomRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Delete room by room number
+     * @param roomNumber Room number
+     * @return true if deleted, false if not found
+     */
+    public boolean deleteRoomByRoomNumber(String roomNumber) {
+        Optional<Room> roomOpt = roomRepository.findByRoomNumber(roomNumber);
+        if (roomOpt.isPresent()) {
+            roomRepository.deleteById(roomOpt.get().getId());
+            return true;
+        }
+        return false;
+    }
 }
