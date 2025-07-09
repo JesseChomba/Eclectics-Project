@@ -29,7 +29,7 @@ public class AuthController {
     private CustomUserDetailsService userDetailsService;
 
     /**
-     * Login endpoint - returns standardized response with status, message, data, and token
+     * Login endpoint - returns standardized response with status, message and data (including token)
      * @param loginRequest Contains username and password
      * @return ResponseEntity with standardized JSON response
      */
@@ -53,12 +53,13 @@ public class AuthController {
             Map<String, String> userData = new HashMap<>();
             userData.put("username", userDetails.getUsername());
             userData.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
+            userData.put("token",token); //including the token in the data field of our endpoint
 
             // Success response
             response.put("Status", 1);
             response.put("Message", "Login successful");
             response.put("Data", userData);
-            response.put("Token", token);
+            //response.put("Token", token); removing token from it's separate field
 
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
@@ -66,14 +67,14 @@ public class AuthController {
             response.put("Status", 0);
             response.put("Message", "Invalid credentials");
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
             // Handle other unexpected exceptions
             response.put("Status", 0);
             response.put("Message", "Authentication failed: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
@@ -84,7 +85,7 @@ public class AuthController {
         response.put("Status", 1);
         response.put("Message", "Logout successful.");
         response.put("Data", "");
-        response.put("Token", "");
+        //response.put("Token", "");
         return ResponseEntity.ok(response);
     }
     // Inner classes for request/response

@@ -47,32 +47,32 @@ public class BookingController {
         try {
             Optional<User> currentUser = userService.findByUsername(auth.getName());
             if (!currentUser.isPresent()) {
-                response.put("Status", 1);
+                response.put("Status", 0);
                 response.put("Message", "User not found");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
             booking.setUser(currentUser.get());
             Booking createdBooking = bookingService.createBooking(booking);
 
-            response.put("Status", 0);
+            response.put("Status", 1);
             response.put("Message", "Booking created successfully");
             response.put("Data", new BookingResponseDTO(createdBooking));
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            response.put("Status", 1);
+            response.put("Status", 0);
             response.put("Message", e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
-            response.put("Status", 1);
+            response.put("Status", 0);
             response.put("Message", "Failed to create booking: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -163,13 +163,20 @@ public class BookingController {
     @PutMapping("/{bookingId}/cancel")
     public ResponseEntity<Booking> cancelBooking(@PathVariable Long bookingId,
                                                  Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
         try {
             Optional<User> currentUser = userService.findByUsername(auth.getName());
             if (!currentUser.isPresent()) {
+                response.put("Status",0);
+                response.put("Message","Bad request");
+                response.put("Data","");
                 return ResponseEntity.badRequest().build();
             }
 
             Booking cancelledBooking = bookingService.cancelBooking(bookingId, currentUser.get().getId());
+            response.put("Status",1);
+            response.put("Message","Booking cancelled successfully");
+            response.put("Data","");
             return ResponseEntity.ok(cancelledBooking);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -191,7 +198,7 @@ public class BookingController {
                 response.put("Status", 0);
                 response.put("Message", "User not found");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -203,13 +210,13 @@ public class BookingController {
             response.put("Status", 1);
             response.put("Message", "Bookings retrieved successfully");
             response.put("Data", bookingDTOs);
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve bookings: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
@@ -235,7 +242,7 @@ public class BookingController {
                 response.put("Status", 0);
                 response.put("Message", "User not found");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -258,13 +265,13 @@ public class BookingController {
             response.put("Status", 1);
             response.put("Message", "Upcoming bookings retrieved successfully");
             response.put("Data", bookingDTOs);
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0 );
             response.put("Message", "Failed to retrieve upcoming bookings: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

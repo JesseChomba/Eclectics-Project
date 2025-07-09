@@ -34,20 +34,20 @@ public class UserController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             List<User> users = userService.getAllUsers();
-            response.put("Status", "OK");
+            response.put("Status", 1);
             response.put("Message", "Users retrieved successfully");
             response.put("Data", users);
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("Status", "ERROR");
+            response.put("Status", 0);
             response.put("Message", "Failed to retrieve users: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -109,13 +109,13 @@ public class UserController {
             response.put("Status", 1);
             response.put("Message", "User registered successfully");
             response.put("Data", registeredUser);
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("Status", 0);
             response.put("Message", e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -124,12 +124,34 @@ public class UserController {
      * Get leaderboard (for gamification)
      * @return List of top users by points
      */
+//    @GetMapping("/leaderboard")
+//    public ResponseEntity<List<User>> getLeaderboard() {
+//        List<User> leaderboard = userService.getLeaderboard();
+//        // Remove passwords from response
+//        leaderboard.forEach(user -> user.setPassword(null));
+//        return ResponseEntity.ok(leaderboard);
+//    }
+
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<User>> getLeaderboard() {
-        List<User> leaderboard = userService.getLeaderboard();
-        // Remove passwords from response
-        leaderboard.forEach(user -> user.setPassword(null));
-        return ResponseEntity.ok(leaderboard);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getLeaderboard() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<User> leaderboard = userService.getLeaderboard();
+            // Remove passwords from response
+            leaderboard.forEach(user -> user.setPassword(null));
+
+            response.put("Status", 1);
+            response.put("Message", "Leaderboard retrieved successfully");
+            response.put("Data", leaderboard);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to retrieve leaderboard: " + e.getMessage());
+            response.put("Data", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
     // Get user by username
     @GetMapping("/username/{username}")

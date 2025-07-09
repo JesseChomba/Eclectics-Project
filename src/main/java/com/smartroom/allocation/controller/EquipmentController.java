@@ -75,7 +75,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -86,14 +86,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment retrieved successfully");
             response.put("Data", equipmentDTOs);
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to retrieve equipment: {}", e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -109,7 +109,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -118,21 +118,21 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + id);
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
             response.put("Status", 1);
             response.put("Message", "Equipment retrieved successfully");
             response.put("Data", new EquipmentResponseDTO(equipmentOpt.get()));
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to retrieve equipment with id {}: {}", id, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -148,7 +148,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -159,14 +159,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Working equipment retrieved successfully");
             response.put("Data", equipmentDTOs);
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to retrieve working equipment: {}", e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve working equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -182,7 +182,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -191,7 +191,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Room not found with roomNumber: " + roomNumber);
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -202,14 +202,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment for room " + roomNumber + " retrieved successfully");
             response.put("Data", equipmentDTOs);
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to retrieve equipment for room {}: {}", roomNumber, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -225,7 +225,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -236,7 +236,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Invalid equipment type: " + type);
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -247,14 +247,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment of type " + type + " retrieved successfully");
             response.put("Data", equipmentDTOs);
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to retrieve equipment by type {}: {}", type, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve equipment by type: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -270,7 +270,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -279,7 +279,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment with name " + equipment.getName() + " already exists in this room");
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -289,7 +289,7 @@ public class EquipmentController {
                     response.put("Status", 0);
                     response.put("Message", "Room not found with id: " + equipment.getRoom().getId());
                     response.put("Data", "");
-                    response.put("Token", "");
+                    //   response.put("Token", "");
                     return ResponseEntity.badRequest().body(response);
                 }
                 equipment.setRoom(roomOpt.get());
@@ -299,14 +299,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment created successfully");
             response.put("Data", new EquipmentResponseDTO(createdEquipment));
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to create equipment: {}", e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to create equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -321,7 +321,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -330,7 +330,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + id);
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -347,7 +347,7 @@ public class EquipmentController {
                     response.put("Status", 0);
                     response.put("Message", "Room not found with id: " + equipmentUpdate.getRoom().getId());
                     response.put("Data", "");
-                    response.put("Token", "");
+                    //   response.put("Token", "");
                     return ResponseEntity.badRequest().body(response);
                 }
                 equipment.setRoom(roomOpt.get());
@@ -366,14 +366,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment updated successfully");
             response.put("Data", new EquipmentResponseDTO(updatedEquipment));
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to update equipment with id {}: {}", id, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to update equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -389,7 +389,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -398,7 +398,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + id);
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -415,14 +415,14 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment unassigned successfully");
             response.put("Data", new EquipmentResponseDTO(updatedEquipment));
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to unassign equipment with id {}: {}", id, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to unassign equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -437,7 +437,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //     response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -446,7 +446,7 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + id);
                 response.put("Data", "");
-                response.put("Token", "");
+                //    response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 

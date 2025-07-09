@@ -37,7 +37,7 @@ public class RoomController {
                 response.put("Status", 1);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             List<Room> rooms = roomService.getAllActiveRooms();
@@ -47,13 +47,13 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Rooms retrieved successfully");
             response.put("Data", roomDTOs);
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve rooms: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -71,7 +71,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             Room room = roomService.findById(id)
@@ -80,19 +80,19 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Room retrieved successfully");
             response.put("Data", roomDTO);
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("Status", 0);
             response.put("Message", e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve room: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -114,14 +114,14 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                // response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             if (startTime.isBefore(LocalDateTime.now())) {
                 response.put("Status", 0);
                 response.put("Message", "Start time cannot be in the past");
                 response.put("Data", "");
-                response.put("Token", "");
+                // response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -129,7 +129,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "End time must be after start time");
                 response.put("Data", "");
-                response.put("Token", "");
+                // response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -140,13 +140,13 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Available rooms retrieved successfully");
             response.put("Data", roomDTOs);
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve available rooms: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -166,7 +166,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             List<Room> rooms = roomService.findRoomsByMinCapacity(minCapacity);
@@ -176,13 +176,13 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Rooms with capacity >= " + minCapacity + " retrieved successfully");
             response.put("Data", roomDTOs);
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to retrieve rooms by capacity: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -201,7 +201,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //  response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             Room createdRoom = roomService.createRoom(room);
@@ -209,19 +209,19 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Room created successfully");
             response.put("Data", roomDTO);
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             response.put("Status", 0);
             response.put("Message", e.getMessage()); // "Room number already exists"
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to create room: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -234,7 +234,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //    response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             RoomStatus status = RoomStatus.valueOf(statusUpdate.get("status"));
@@ -243,13 +243,13 @@ public class RoomController {
             response.put("Status", 1);
             response.put("Message", "Room status updated successfully");
             response.put("Data", new RoomResponseDTO(updatedRoom));
-            response.put("Token", "");
+            //   response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to update room status: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -269,26 +269,26 @@ public class RoomController {
                 response.put("Status",0);
                 response.put("Message","Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //    response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             Room updatedRoom = roomService.updateRoom(id, roomUpdate);
             response.put("Status", 1);
             response.put("Message", "Room updated successfully");
             response.put("Data", new RoomResponseDTO(updatedRoom));
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.ok(response);
         }catch (IllegalArgumentException e) {
             response.put("Status", 0);
             response.put("Message", e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to update room: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            // response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -313,7 +313,7 @@ public class RoomController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                response.put("Token", "");
+                //    response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             boolean deleted = roomService.deleteRoomById(id);
@@ -321,20 +321,20 @@ public class RoomController {
                 response.put("Status", 1);
                 response.put("Message", "Room deleted successfully");
                 response.put("Data", "");
-                response.put("Token", "");
+                //    response.put("Token", "");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("Status", 0);
                 response.put("Message", "Room not found with id: " + id);
                 response.put("Data", "");
-                response.put("Token", "");
+                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to delete room:" + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
+            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
