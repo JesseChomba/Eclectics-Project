@@ -47,7 +47,7 @@ public class SecurityConfig {
         config.setAllowCredentials(true); // Optional: allow cookies/auth headers if needed
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/", config);
+        source.registerCorsConfiguration("/**", config);
 
         return source;
     }
