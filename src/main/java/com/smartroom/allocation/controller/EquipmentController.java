@@ -311,6 +311,42 @@ public class EquipmentController {
         }
     }
 
+    /**
+     * Create new equipment and assign to a room by room number (Admin only)
+     * @param equipment Equipment details
+     * @param roomNumber Room number to assign equipment to
+     * @return Created equipment in standardized format
+     */
+    @PostMapping("/room/{roomNumber}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> createEquipment(@Valid @RequestBody Equipment equipment,
+                                                               @PathVariable String roomNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<Room> roomOpt = roomService.findByRoomNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found with number: " + roomNumber);
+                response.put("Data", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            equipment.setRoom(roomOpt.get());
+            Equipment createdEquipment = equipmentRepository.save(equipment);
+
+            response.put("Status", 1);
+            response.put("Message", "Equipment created successfully");
+            response.put("Data", createdEquipment);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to create equipment: " + e.getMessage());
+            response.put("Data", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
     /*Update Equipment details via id. Requires admin privileges*/
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -374,6 +410,61 @@ public class EquipmentController {
             response.put("Message", "Failed to update equipment: " + e.getMessage());
             response.put("Data", "");
             //  response.put("Token", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Update equipment details (Admin only)
+     * @param equipmentId Equipment ID to update
+     * @param roomNumber Room number to assign equipment to
+     * @param equipment Updated equipment details
+     * @return Updated equipment in standardized format
+     */
+    @PutMapping("/{equipmentId}/room/{roomNumber}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> updateEquipment(@PathVariable Long equipmentId,
+                                                               @PathVariable String roomNumber,
+                                                               @Valid @RequestBody Equipment equipment) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<Equipment> existingEquipmentOpt = equipmentRepository.findById(equipmentId);
+            if (!existingEquipmentOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Equipment not found with id: " + equipmentId);
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Optional<Room> roomOpt = roomService.findByRoomNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found with number: " + roomNumber);
+                response.put("Data", "");
+                response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Equipment existingEquipment = existingEquipmentOpt.get();
+            existingEquipment.setName(equipment.getName());
+            existingEquipment.setType(equipment.getType());
+            existingEquipment.setDescription(equipment.getDescription());
+            existingEquipment.setWorking(equipment.isWorking());
+            existingEquipment.setRoom(roomOpt.get());
+
+            Equipment updatedEquipment = equipmentRepository.save(existingEquipment);
+
+            response.put("Status", 1);
+            response.put("Message", "Equipment updated successfully");
+            response.put("Data", updatedEquipment);
+            response.put("Token", "");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to update equipment: " + e.getMessage());
+            response.put("Data", "");
+            response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
