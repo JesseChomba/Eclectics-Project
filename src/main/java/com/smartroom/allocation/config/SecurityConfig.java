@@ -55,7 +55,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {}) // Disable CORS or configure as needed
+                .cors(cors ->cors.configurationSource(corsConfigurationSource())) // Use CORS cofig directly
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)  //Handles 401 for Unauthenticated users
