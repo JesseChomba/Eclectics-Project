@@ -117,6 +117,7 @@ public class UserController {
         }
     }
 
+
     /**
      * Register a new user
      * @param user User details

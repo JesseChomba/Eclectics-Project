@@ -119,6 +119,8 @@ public class UserService {
         return userRepository.findById(id).map(user -> {
             user.setDepartment(userUpdate.getDepartment());
             user.setFullName(userUpdate.getFullName());
+            user.setUsername(userUpdate.getUsername()); //added
+            user.setEmail(userUpdate.getEmail()); //added
             user.setActive(userUpdate.isActive());
             user.setRole(userUpdate.getRole());
             user.setPoints(userUpdate.getPoints());
