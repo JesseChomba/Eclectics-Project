@@ -86,6 +86,38 @@ public class UserController {
     }
 
     /**
+     * Get user by ID (Admin only)
+     * @param id User ID
+     * @return User details
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String,Object>> getUserById(@PathVariable Long id){
+        Map<String, Object> response= new HashMap<>();
+        try {
+            Optional<User> userOpt = userService.findById(id);
+            if (!userOpt.isPresent()){
+                response.put("Status",0);
+                response.put("Message","User not found with id: " +id);
+                response.put("Data","");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            User user = userOpt.get();
+            userService.findAndPopulateTotalBookings(user.getUsername()); //update total bookings
+            user.setPassword(null); //avoid exposing password
+            response.put("Status",1);
+            response.put("Message", "User retrieved successfully");
+            response.put("Data",user);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status",0);
+            response.put("Message","Failed to retrieve user: "+ e.getMessage());
+            response.put("Data","");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * Register a new user
      * @param user User details
      * @return Registered user
