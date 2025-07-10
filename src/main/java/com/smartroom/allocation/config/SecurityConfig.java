@@ -73,9 +73,14 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
+                        .requestMatchers("/api/users/me").authenticated() // Add this line
+                        .requestMatchers(HttpMethod.GET,"/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT,"/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/rooms/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/equipment/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/equipment").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,"api/equipment/{id}").authenticated()
-                        .requestMatchers("/api/users/me").authenticated() // Add this line
+
                         .anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

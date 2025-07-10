@@ -73,6 +73,7 @@ public class JwtTokenUtil {
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        //changes to modify token response to include "Role"
         claims.put("authorities",userDetails.getAuthorities()
                 .stream()
                 .map(auth -> auth.getAuthority())
