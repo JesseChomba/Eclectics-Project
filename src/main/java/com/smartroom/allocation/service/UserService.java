@@ -115,12 +115,32 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    /*
+    * CORRECTED: Update user details by ID
+    * Only updates non-null fields from the userUpdate object to
+    * prevent accidentally nullifying existing data
+    * @param id The ID of the user to annotate
+    * @param userupdate An object containing the new user data.
+    * @return An Optional containing the updated user, or empty if not found.*/
     public Optional<User> updateUserById(Long id, User userUpdate) {
         return userRepository.findById(id).map(user -> {
-            user.setDepartment(userUpdate.getDepartment());
+            //only update fields if they are provided in the request body
+            if (userUpdate.getFullName() !=null){
+                user.setFullName(userUpdate.getFullName());
+            }
+            if (userUpdate.getUsername() !=null){
+                user.setUsername(userUpdate.getUsername()); //added
+            }
             user.setFullName(userUpdate.getFullName());
-            user.setUsername(userUpdate.getUsername()); //added
-            user.setEmail(userUpdate.getEmail()); //added
+            if (userUpdate.getEmail() !=null){
+                user.setEmail(userUpdate.getEmail()); //added
+            }
+            if (userUpdate.getDepartment() !=null){
+                user.setDepartment(userUpdate.getDepartment());
+            }
+            if (userUpdate.getRole() !=null){
+                user.setRole(userUpdate.getRole());
+            }
             user.setActive(userUpdate.isActive());
             user.setRole(userUpdate.getRole());
             user.setPoints(userUpdate.getPoints());
