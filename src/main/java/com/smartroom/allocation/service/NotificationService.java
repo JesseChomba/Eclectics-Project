@@ -1,5 +1,5 @@
 package com.smartroom.allocation.service;
-
+import com.smartroom.allocation.dto.BookingResponseDTO;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.User;
@@ -21,6 +21,7 @@ import java.util.List;
 public class NotificationService {
 
     private static final Logger logger= LoggerFactory.getLogger(NotificationService.class);
+    private static final DateTimeFormatter FORMATTER= DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Autowired
     private JavaMailSender mailSender;
@@ -53,6 +54,11 @@ public class NotificationService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(booking.getUser().getEmail());
+            //Ensure room and user objects are not null before accessing their properties
+            String roomNumber =booking.getRoom() != null ? booking.getRoom().getRoomNumber() : "N/A";
+            String roomName = booking.getRoom() != null ? booking.getRoom().getName() : "N/A";
+            String userName = booking.getUser() != null ? booking.getUser().getFullName() : "User";
+
             message.setSubject("Room Booking Confirmation - " + booking.getRoom().getRoomNumber());
             message.setText(String.format(
                     "Dear %s,\n\n" +
@@ -63,9 +69,12 @@ public class NotificationService {
                             "Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.\n\n" +
                             "Best regards,\n" +
                             "Smart Room Allocation System",
-                    booking.getUser().getFullName(),
-                    booking.getRoom().getRoomNumber(),
-                    booking.getRoom().getName(),
+                    //booking.getUser().getFullName(),
+                    userName,
+                    //booking.getRoom().getRoomNumber(),
+                    roomNumber,
+                    //booking.getRoom().getName(),
+                    roomName,
                     booking.getStartTime().toString(),
                     booking.getEndTime().toString(),
                     booking.getPurpose()
@@ -75,7 +84,54 @@ public class NotificationService {
         } catch (Exception e) {
             // Log error but don't fail the booking process
             System.err.println("Failed to send confirmation email: " + e.getMessage());
+            logger.error("Failed to send confirmation email: {}", e.getMessage(),e); //Using logger for better error handling
         }
+    }
+
+    /*
+     * Send email notification for a booking update
+     * @param oldBooking The original booking details
+     * @param newBooking The updated booking details
+     * */
+    public void sendBookingUpdatedEmail(Booking oldBooking, Booking newBooking){
+        SimpleMailMessage message =new SimpleMailMessage();
+        message.setTo(newBooking.getUser().getEmail());
+        message.setSubject("Booking Updated: " +newBooking.getRoom().getName());
+        String text = String.format (
+                "Dear %s,\n\n" +
+                        "Your booking details for room %s have been updated.\n\n"+
+                        "Original Details:\n" +
+                        "   Room:   %s\n"+
+                        "   Start Time: %s\n"+
+                        "   End Time:   %s\n"+
+                        "   Purpose:    %s\n"+
+                        "New Details:\n"+
+                        "   Room:   %s\n"+
+                        "   Start Time: %s\n"+
+                        "   End Time:   %s\n"+
+                        "   Purpose:    %s\n"+
+                        "Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.\n\n" +
+                        "Best regards,\n" +
+                        "Smart Room Allocation System",
+                newBooking.getUser().getFullName(),
+                oldBooking.getRoom().getRoomNumber(),
+                oldBooking.getRoom().getName(),
+                oldBooking.getStartTime().format(FORMATTER),
+                oldBooking.getEndTime().format(FORMATTER),
+                oldBooking.getPurpose(),
+                newBooking.getRoom().getName(),
+                newBooking.getStartTime().format(FORMATTER),
+                newBooking.getEndTime().format(FORMATTER),
+                newBooking.getPurpose());
+        message.setText(text);
+        try {
+            mailSender.send(message);
+            logger.info("Booking update email sent to {}", newBooking.getUser().getEmail());
+        } catch (Exception e) {
+            logger.error("Failed to send booking update email to {}: {}", newBooking.getUser().getEmail(), e.getMessage());
+        }
+
+
     }
 
     /**
@@ -235,5 +291,88 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Send user update notification email
+     * @param user Updated user
+     */
 
+    @Async
+    public void sendUserUpdateNotification(User user) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(user.getEmail());
+            message.setSubject("Smart Room Allocation System - Account Update Notification");
+            message.setText(String.format(
+                    "Dear %s,\n\n" +
+                            "Your account details in the Smart Room Allocation System have been updated.\n\n" +
+                            "Updated Account Details:\n" +
+                            "Username: %s\n" +
+                            "Full Name: %s\n" +
+                            "Email: %s\n" +
+                            "Role: %s\n" +
+                            "Department: %s\n" +
+                            "Active Status: %s\n\n" +
+                            "If you did not request these changes, please contact our support team immediately.\n\n" +
+                            "Best regards,\n" +
+                            "Smart Room Allocation System",
+                    user.getFullName(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getRole().toString(),
+                    user.getDepartment() != null ? user.getDepartment() : "Not specified",
+                    user.isActive() ? "Active" : "Inactive"
+            ));
+
+            mailSender.send(message);
+            logger.info("User update notification sent to {}", user.getEmail());
+        } catch (Exception e) {
+            logger.error("Failed to send user update notification to {}: {}", user.getEmail(), e.getMessage());
+        }
+    }
+
+    /**
+     * Send room update notification email to users with upcoming bookings
+     * @param room Updated room
+     * @param recipientEmails List of user emails to notify */
+    @Async
+    public void sendRoomUpdateNotification(Room room, List<String> recipientEmails) {
+        try {
+            for (String email : recipientEmails) {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setTo(email);
+                message.setSubject("Smart Room Allocation System - Room Update Notification");
+                message.setText(String.format(
+                        "Dear User,\n\n" +
+                                "The details of a room you have booked have been updated.\n\n" +
+                                "Updated Room Details:\n" +
+                                "Room Number: %s\n" +
+                                "Name: %s\n" +
+                                "Building: %s\n" +
+                                "Floor: %s\n" +
+                                "Location: %s\n" +
+                                "Room Type: %s\n" +
+                                "Capacity: %d\n" +
+                                "Status: %s\n" +
+                                "Active: %s\n\n" +
+                                "Please review your upcoming bookings to ensure this room still meets your needs.\n\n" +
+                                "Best regards,\n" +
+                                "Smart Room Allocation System",
+                        room.getRoomNumber(),
+                        room.getName(),
+                        room.getBuilding() != null ? room.getBuilding() : "Not specified",
+                        room.getFloor() != null ? room.getFloor() : "Not specified",
+                        room.getLocation() != null ? room.getLocation() : "Not specified",
+                        room.getRoomType() != null ? room.getRoomType().toString() : "Not specified",
+                        room.getCapacity(),
+                        room.getStatus() != null ? room.getStatus().toString() : "Not specified",
+                        room.isActive() ? "Active" : "Inactive"
+                ));
+
+                mailSender.send(message);
+                logger.info("Room update notification sent to {}", email);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send room update notification to {}: {}", recipientEmails, e.getMessage());
+        }
+    }
 }

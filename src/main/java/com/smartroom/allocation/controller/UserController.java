@@ -1,11 +1,15 @@
 package com.smartroom.allocation.controller;
 
+import com.smartroom.allocation.dto.PasswordUpdateRequest;
+import com.smartroom.allocation.dto.UserResponseDTO;
 import com.smartroom.allocation.entity.User;
 import com.smartroom.allocation.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +41,8 @@ public class UserController {
                 //response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
-            List<User> users = userService.getAllUsers();
+            //changed to call updated service method that returns DTOs
+            List<UserResponseDTO> users = userService.getAllUsers();
             response.put("Status", 1);
             response.put("Message", "Users retrieved successfully");
             response.put("Data", users);
@@ -116,7 +121,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 
     /**
      * Register a new user
@@ -209,11 +213,11 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> updateUserById(@PathVariable Long id, @RequestBody User userUpdate) {
         Map<String, Object> response = new HashMap<>();
-        Optional<User> updated = userService.updateUserById(id, userUpdate);
-        if (updated.isPresent()) {
+        Optional<UserResponseDTO> updatedUserDTO = userService.updateUserById(id, userUpdate);
+        if (updatedUserDTO.isPresent()) {
             response.put("Status", 1);
             response.put("Message", "User updated successfully");
-            response.put("Data", updated.get());
+            response.put("Data", updatedUserDTO.get());
             return ResponseEntity.ok(response);
         } else {
             response.put("Status", 0);
@@ -225,6 +229,7 @@ public class UserController {
 
     // User: Update own profile
     @PutMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> updateOwnProfile(Authentication auth, @RequestBody User userUpdate) {
         Map<String, Object> response = new HashMap<>();
         Optional<User> current = userService.findByUsername(auth.getName());
@@ -234,7 +239,7 @@ public class UserController {
             response.put("Data", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        Optional<User> updated = userService.updateUserById(current.get().getId(), userUpdate);
+        Optional<UserResponseDTO> updated = userService.updateUserById(current.get().getId(), userUpdate);
         if (updated.isPresent()) {
             response.put("Status", 1);
             response.put("Message", "Profile updated successfully");
@@ -248,6 +253,35 @@ public class UserController {
         }
     }
 
+    //User: Update own password
+    @PutMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> updateOwnPassword(@Valid @RequestBody PasswordUpdateRequest passwordRequest, Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User currentUser = userService.findByUsername(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            userService.updateUserPassword(
+                    currentUser.getId(),
+                    passwordRequest.getOldPassword(),
+                    passwordRequest.getNewPassword()
+            );
+
+            response.put("Status", 1);
+            response.put("Message", "Password updated successfully");
+            return ResponseEntity.ok(response);
+
+        } catch ( BadCredentialsException e) {
+            response.put("Status", 0);
+            response.put("Message", "Incorrect old password");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to update password: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
     // Admin: Delete user by ID
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -267,6 +301,7 @@ public class UserController {
 
     // User: Delete own account
     @DeleteMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> deleteOwnAccount(Authentication auth) {
         Map<String, Object> response = new HashMap<>();
         Optional<User> current = userService.findByUsername(auth.getName());

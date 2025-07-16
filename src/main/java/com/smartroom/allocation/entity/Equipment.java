@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
+
 @Entity
 @Table(name = "equipment")
 public class Equipment {
@@ -18,7 +19,11 @@ public class Equipment {
     private EquipmentType type;
 
     private String description;
-    private boolean working = true;
+
+    //changed from primitive 'boolean' to wrapper 'Boolean'
+    //This allows the field to be null if not provided in JSON,
+    // enabling conditional updates.
+    private Boolean working = true;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
@@ -46,8 +51,9 @@ public class Equipment {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public boolean isWorking() { return working; }
-    public void setWorking(boolean working) { this.working = working; }
+    //Getter and setter for the Boolean wrapper type
+    public Boolean getWorking() { return working; }
+    public void setWorking(Boolean working) { this.working = working; }
 
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }

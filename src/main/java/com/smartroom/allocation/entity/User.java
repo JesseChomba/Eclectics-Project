@@ -33,13 +33,13 @@ public class User {
     private UserRole role; // ADMIN, LECTURER, STUDENT
 
     private String department;
-    private boolean active = true;
+    private Boolean active = true; //default to active
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Gamification fields
-    private int usageStreak = 0; // Days of consecutive usage
+    private Integer usageStreak = 0; // Days of consecutive usage
     private int totalBookings = 0;
-    private int points = 0;
+    private Integer points = 0;
 
     // One-to-many relationship with bookings
     @JsonManagedReference("user-bookings") // Manage serialization of bookings
@@ -80,20 +80,20 @@ public class User {
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public Boolean isActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public int getUsageStreak() { return usageStreak; }
-    public void setUsageStreak(int usageStreak) { this.usageStreak = usageStreak; }
+    public Integer getUsageStreak() { return usageStreak; }
+    public void setUsageStreak(Integer usageStreak) { this.usageStreak = usageStreak; }
 
     public int getTotalBookings() { return totalBookings; }
     public void setTotalBookings(int totalBookings) { this.totalBookings = totalBookings; }
 
-    public int getPoints() { return points; }
-    public void setPoints(int points) { this.points = points; }
+    public Integer getPoints() { return points; }
+    public void setPoints(Integer points) { this.points = points; }
 
     public List<Booking> getBookings() { return bookings; }
     public void setBookings(List<Booking> bookings) { this.bookings = bookings; }

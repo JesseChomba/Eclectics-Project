@@ -1,14 +1,17 @@
 package com.smartroom.allocation.service;
 
+import com.smartroom.allocation.dto.UserResponseDTO;
 import com.smartroom.allocation.entity.User;
 import com.smartroom.allocation.entity.UserRole;
 import com.smartroom.allocation.repository.BookingRepository;
 import com.smartroom.allocation.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -47,15 +50,21 @@ public class UserService {
     }
 
     /*Get all users available
-     * for admins only*/
-    public List<User> getAllUsers() {
-//        return userRepository.findAll();
+     * for admins only
+     * Now updated to return DTOs to hide sensitive details like password*/
+    public List<UserResponseDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
-        for (User user : users) {
-            int count = bookingRepository.countByUser(user);
-            user.setTotalBookings(count); // Ensure this setter exists
-        }
-        return users;
+        //populate totalBookings and then map to DTOs
+//        for (User user : users) {
+//            int count = bookingRepository.countByUser(user);
+//            user.setTotalBookings(count); // Ensure this setter exists
+//        }
+//        return users;
+        return users.stream().map(user -> {
+            int count= bookingRepository.countByUser(user);
+            user.setTotalBookings(count);
+            return new UserResponseDTO(user); //converts user entity to DTO
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -115,47 +124,87 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    /**
+     * Updates the password for a given user after verifying the old password
+     * @param userId the ID of the user.
+     * @param oldPassword The user's current password.
+     * @param newPassword The new password to set.
+     * @throws BadCredentialsException if the old password does not match
+     * */
+    public void updateUserPassword(Long userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        // Check if the old password matches the stored password
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Incorrect old password");
+        }
+
+        // Encode the new password and save it
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+    }
+
     /*
-    * CORRECTED: Update user details by ID
-    * Only updates non-null fields from the userUpdate object to
-    * prevent accidentally nullifying existing data
-    * @param id The ID of the user to annotate
-    * @param userupdate An object containing the new user data.
-    * @return An Optional containing the updated user, or empty if not found.*/
-    public Optional<User> updateUserById(Long id, User userUpdate) {
+     * CORRECTED: Update user details by ID
+     * Only updates non-null fields from the userUpdate object to
+     * prevent accidentally nullifying existing data
+     * @param id The ID of the user to update
+     * @param userUpdate An object containing the new user data.
+     * @return An Optional containing the updated user, or empty if not found.
+     */
+    public Optional<UserResponseDTO> updateUserById(Long id, User userUpdate) { //changed return type
         return userRepository.findById(id).map(user -> {
-            //only update fields if they are provided in the request body
-            if (userUpdate.getFullName() !=null){
+            // Check if Username or email that is being updated already exists
+            if(userUpdate.getUsername() !=null && !user.getUsername().equals(userUpdate.getUsername()) && userRepository.existsByUsername(userUpdate.getUsername())){
+                throw new RuntimeException("Username already exists!");
+            }
+            if(userUpdate.getEmail() !=null && !user.getEmail().equals(userUpdate.getEmail()) && userRepository.existsByEmail(userUpdate.getEmail())){
+                throw new RuntimeException("Username already exists!");
+            }
+            // Only update fields if they are provided in the request body (i.e., not null)
+            if (userUpdate.getFullName() != null) {
                 user.setFullName(userUpdate.getFullName());
             }
-            if (userUpdate.getUsername() !=null){
-                user.setUsername(userUpdate.getUsername()); //added
+            // Removed the duplicate user.setFullName(userUpdate.getFullName());
+
+            if (userUpdate.getUsername() != null) {
+                user.setUsername(userUpdate.getUsername());
             }
-            user.setFullName(userUpdate.getFullName());
-            if (userUpdate.getEmail() !=null){
-                user.setEmail(userUpdate.getEmail()); //added
+            if (userUpdate.getEmail() != null) {
+                user.setEmail(userUpdate.getEmail());
             }
-            if (userUpdate.getDepartment() !=null){
+            if (userUpdate.getDepartment() != null) {
                 user.setDepartment(userUpdate.getDepartment());
             }
-            if (userUpdate.getRole() !=null){
+            if (userUpdate.getRole() != null) {
                 user.setRole(userUpdate.getRole());
             }
-            user.setActive(userUpdate.isActive());
-            user.setRole(userUpdate.getRole());
-            user.setPoints(userUpdate.getPoints());
-            user.setUsageStreak(userUpdate.getUsageStreak());
-            return userRepository.save(user);
+
+            // Now that 'active', 'points', 'usageStreak' are wrapper types (Boolean, Integer),
+            // they can be null if omitted from the JSON.
+            // Apply conditional updates for them as well.
+            if (userUpdate.isActive() != null) {
+                user.setActive(userUpdate.isActive());
+            }
+            if (userUpdate.getPoints() != null) {
+                user.setPoints(userUpdate.getPoints());
+            }
+            if (userUpdate.getUsageStreak() != null) {
+                user.setUsageStreak(userUpdate.getUsageStreak());
+            }
+
+            User updatedUser = userRepository.save(user);
+
+            //populate totalBookings before converting to DTO
+            int count = bookingRepository.countByUser(updatedUser);
+            updatedUser.setTotalBookings(count);
+            notificationService.sendUserUpdateNotification(updatedUser);
+            return new UserResponseDTO(updatedUser); // Return DTO
         });
     }
 
-    //    public boolean deleteUserById(Long id) {    old implementation!
-//        if (userRepository.existsById(id)) {
-//            userRepository.deleteById(id);
-//            return true;
-//        }Old implementation
-//        return false;
-//    }
     public boolean deleteUserById(Long id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isPresent()) {
@@ -166,6 +215,11 @@ public class UserService {
         return false;
     }
 
+    /**
+     * Find user by username and populate total bookings
+     * @param username Username to search for
+     * @return userOpt if found
+     * */
     public Optional<User> findAndPopulateTotalBookings(String username) {
         Optional<User> userOpt = findByUsername(username);
         userOpt.ifPresent(user -> {

@@ -35,4 +35,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Find top users by points (for gamification leaderboard)
     @Query("SELECT u FROM User u WHERE u.active = true ORDER BY u.points DESC")
     List<User> findTopUsersByPoints();
+
+    //AdminDashboard: Count all active users
+    long countByActiveTrue();
 }

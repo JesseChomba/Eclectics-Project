@@ -48,4 +48,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.updatedAt < :threshold")
     List<Booking> findByStatusAndUpdatedAtBefore(@Param("status") BookingStatus status,
                                                  @Param("threshold") LocalDateTime threshold);
+
+    //new query to help with updating bookings & Find overlapping bookings excluding a specific booking ID
+    @Query("SELECT b FROM Booking b WHERE b.room.id = :roomId AND b.id != :bookingId AND ((b.startTime <= :endTime AND b.endTime >= :startTime))")
+    List<Booking> findOverlappingBookingsExcludingCurrent(@Param("roomId") Long roomId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime, @Param("bookingId") Long bookingId);
+
+    //new query to count all bookings ever made
+    long count();
+    //Count all upcoming bookings (status CONFIRMED and startTime in future)
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'CONFIRMED' and b.startTime > :currentTime")
+    long countUpcomingBookings(@Param("currentTime") LocalDateTime currentTime);
+
 }

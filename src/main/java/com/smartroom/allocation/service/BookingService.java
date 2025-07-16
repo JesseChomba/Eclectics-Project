@@ -1,10 +1,13 @@
 package com.smartroom.allocation.service;
 
+import com.smartroom.allocation.dto.BookingResponseDTO;
+import com.smartroom.allocation.dto.BookingUpdateDTO;
 import com.smartroom.allocation.dto.RecurringBookingRequest;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.BookingStatus;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.User;
+import com.smartroom.allocation.exception.ResourceNotFoundException;
 import com.smartroom.allocation.repository.BookingRepository;
 import com.smartroom.allocation.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,6 +144,82 @@ public class BookingService {
         return savedBookings;
     }
 
+    /**
+     * Update an existing booking
+     * @param bookingId the ID of the booking to update.
+     * @param updateDTO the DTo containing the updated booking details.
+     * @param username The username of the currently authenticated user.
+     * @return The updated booking.
+     * @throws IllegalArgumentException if the boking is in the past or the new time slot is invlaid or unavailable.
+     * @throws ResourceNotFoundException if the booking is not found.
+     * @throws SecurityException if the user does not own the booking*/
+    @Transactional
+    public BookingResponseDTO updateBooking(Long bookingId, BookingUpdateDTO updateDTO, String username) { // Changed return type
+        Booking existingBooking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
+
+        // 1. Check if the authenticated user is the owner of the booking
+        if (!existingBooking.getUser().getUsername().equals(username)) {
+            throw new SecurityException("You do not have permission to update this booking.");
+        }
+
+        // 2. Check if the booking is in the past or currently active
+        if (existingBooking.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Cannot update a booking that has already started or is in the past.");
+        }
+
+        // Store old booking details for notification BEFORE potential updates
+        Booking oldBooking = new Booking();
+        oldBooking.setId(existingBooking.getId());
+        oldBooking.setStartTime(existingBooking.getStartTime());
+        oldBooking.setEndTime(existingBooking.getEndTime());
+        oldBooking.setPurpose(existingBooking.getPurpose());
+        oldBooking.setRoom(existingBooking.getRoom());
+        oldBooking.setUser(existingBooking.getUser());
+
+        LocalDateTime proposedStartTime = updateDTO.getStartTime();
+        LocalDateTime proposedEndTime = updateDTO.getEndTime();
+        String proposedPurpose = updateDTO.getPurpose();
+
+        // Determine the effective new start and end times for validation and update
+        LocalDateTime effectiveNewStartTime = (proposedStartTime != null) ? proposedStartTime : existingBooking.getStartTime();
+        LocalDateTime effectiveNewEndTime = (proposedEndTime != null) ? proposedEndTime : existingBooking.getEndTime();
+
+        // 3. Validate new time slot IF times are being changed or both are provided.
+        if (effectiveNewStartTime.isAfter(effectiveNewEndTime) || effectiveNewStartTime.isEqual(effectiveNewEndTime)) {
+            throw new IllegalArgumentException("New end time must be after new start time.");
+        }
+
+        // 4. Check for room availability for the new effective time slot, but ONLY if the times have actually changed
+        boolean timesChanged = !effectiveNewStartTime.equals(existingBooking.getStartTime()) || !effectiveNewEndTime.equals(existingBooking.getEndTime());
+
+        if (timesChanged) {
+            List<Booking> overlappingBookings = bookingRepository.findOverlappingBookingsExcludingCurrent(
+                    existingBooking.getRoom().getId(),
+                    effectiveNewStartTime,
+                    effectiveNewEndTime,
+                    existingBooking.getId()
+            );
+            if (!overlappingBookings.isEmpty()) {
+                throw new IllegalArgumentException("Room is not available during the new specified time.");
+            }
+            // Update the booking times only if they changed and are available
+            existingBooking.setStartTime(effectiveNewStartTime);
+            existingBooking.setEndTime(effectiveNewEndTime);
+        }
+
+        // 5. Update purpose if provided
+        if (proposedPurpose != null) {
+            existingBooking.setPurpose(proposedPurpose);
+        }
+
+        Booking updatedBooking = bookingRepository.save(existingBooking);
+
+        // 6. Send notification email
+        notificationService.sendBookingUpdatedEmail(oldBooking, updatedBooking);
+
+        return new BookingResponseDTO(updatedBooking); // Return DTO
+    }
     /**
      * Cancel a booking
      * @param bookingId Booking ID to cancel

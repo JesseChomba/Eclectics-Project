@@ -260,7 +260,7 @@ public class RoomController {
      * @param roomUpdate Room details to update
      * @return Updated room
      * */
-    @PutMapping
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String,Object>> updateRoom(@PathVariable Long id, @RequestBody Room roomUpdate,Authentication auth){
         Map<String,Object> response = new HashMap<>();

@@ -59,7 +59,7 @@ public class EquipmentController {
             String subject = "Equipment Update Notification for Room"+ room.getRoomNumber();
             String message = String.format("The Equipment '%s' in Room %s has been %s", equipmentName,room.getRoomNumber(),action);
             notificationService.sendEquipmentUpdateNotification(recipientEmails,subject,message);
-            logger.info("Notifications queued for {} users for room {}",recipientEmails.size(),room.getRoomNumber());
+            logger.info("Notifications queued for {} users for room {}\n",recipientEmails.size(),room.getRoomNumber());
 
         }
     }
@@ -357,7 +357,6 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Authentication required");
                 response.put("Data", "");
-                //   response.put("Token", "");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
@@ -366,16 +365,28 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + id);
                 response.put("Data", "");
-                //   response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
             Equipment equipment = equipmentOpt.get();
             Room oldRoom= equipment.getRoom();
-            equipment.setName(equipmentUpdate.getName());
-            equipment.setType(equipmentUpdate.getType());
-            equipment.setDescription(equipmentUpdate.getDescription());
-            equipment.setWorking(equipmentUpdate.isWorking());
+
+            // Conditionally update fields to prevent nulling out existing data
+            if (equipmentUpdate.getName() != null) {
+                equipment.setName(equipmentUpdate.getName());
+            }
+            if (equipmentUpdate.getType() != null) {
+                equipment.setType(equipmentUpdate.getType());
+            }
+            if (equipmentUpdate.getDescription() != null) {
+                equipment.setDescription(equipmentUpdate.getDescription());
+            }
+            // For 'working' status, check if it's explicitly provided in the update
+            // Now that 'working' is a Boolean wrapper, it can be null if not present in JSON.
+            if (equipmentUpdate.getWorking() != null) {
+                equipment.setWorking(equipmentUpdate.getWorking());
+            }
+
 
             if (equipmentUpdate.getRoom() != null) {
                 Optional<Room> roomOpt = roomService.findById(equipmentUpdate.getRoom().getId());
@@ -383,11 +394,16 @@ public class EquipmentController {
                     response.put("Status", 0);
                     response.put("Message", "Room not found with id: " + equipmentUpdate.getRoom().getId());
                     response.put("Data", "");
-                    //   response.put("Token", "");
                     return ResponseEntity.badRequest().body(response);
                 }
                 equipment.setRoom(roomOpt.get());
             } else {
+                // If room is explicitly set to null in the request, unassign it
+                // Or if it was simply omitted from the JSON, and you want to unassign it
+                // This behavior depends on your API design. If omitting means "don't change",
+                // then this else block might need a more nuanced check (e.g., a separate DTO
+                // that distinguishes between 'null' and 'not present').
+                // For now, assuming if room is null in equipmentUpdate, it means unassign.
                 equipment.setRoom(null);
             }
 
@@ -402,14 +418,12 @@ public class EquipmentController {
             response.put("Status", 1);
             response.put("Message", "Equipment updated successfully");
             response.put("Data", new EquipmentResponseDTO(updatedEquipment));
-            // response.put("Token", "");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to update equipment with id {}: {}", id, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to update equipment: " + e.getMessage());
             response.put("Data", "");
-            //  response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -418,14 +432,14 @@ public class EquipmentController {
      * Update equipment details (Admin only)
      * @param equipmentId Equipment ID to update
      * @param roomNumber Room number to assign equipment to
-     * @param equipment Updated equipment details
+     * @param equipmentUpdate Updated equipment details (partial update allowed)
      * @return Updated equipment in standardized format
      */
     @PutMapping("/{equipmentId}/room/{roomNumber}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> updateEquipment(@PathVariable Long equipmentId,
                                                                @PathVariable String roomNumber,
-                                                               @Valid @RequestBody Equipment equipment) {
+                                                               @Valid @RequestBody Equipment equipmentUpdate) { // Renamed to equipmentUpdate for clarity
         Map<String, Object> response = new HashMap<>();
         try {
             Optional<Equipment> existingEquipmentOpt = equipmentRepository.findById(equipmentId);
@@ -433,7 +447,6 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Equipment not found with id: " + equipmentId);
                 response.put("Data", "");
-                response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -442,29 +455,56 @@ public class EquipmentController {
                 response.put("Status", 0);
                 response.put("Message", "Room not found with number: " + roomNumber);
                 response.put("Data", "");
-                response.put("Token", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
             Equipment existingEquipment = existingEquipmentOpt.get();
-            existingEquipment.setName(equipment.getName());
-            existingEquipment.setType(equipment.getType());
-            existingEquipment.setDescription(equipment.getDescription());
-            existingEquipment.setWorking(equipment.isWorking());
+            Room oldRoom = existingEquipment.getRoom(); // Store old room for notification
+
+            // Conditionally update fields from equipmentUpdate
+            if (equipmentUpdate.getName() != null) {
+                existingEquipment.setName(equipmentUpdate.getName());
+            }
+            if (equipmentUpdate.getType() != null) {
+                existingEquipment.setType(equipmentUpdate.getType());
+            }
+            if (equipmentUpdate.getDescription() != null) {
+                existingEquipment.setDescription(equipmentUpdate.getDescription());
+            }
+            // Now that 'working' is a Boolean wrapper, it can be null if not present in JSON.
+            // This allows us to preserve the existing value if the field is omitted.
+            if (equipmentUpdate.getWorking() != null) {
+                existingEquipment.setWorking(equipmentUpdate.getWorking());
+            }
+
+            // Assign the room from the path variable
             existingEquipment.setRoom(roomOpt.get());
 
             Equipment updatedEquipment = equipmentRepository.save(existingEquipment);
 
+            // Notify users if the equipment's room changed or its details were updated
+            if (updatedEquipment.getRoom() != null && !updatedEquipment.getRoom().equals(oldRoom)) {
+                notifyUsersForRoom(updatedEquipment.getRoom(), updatedEquipment.getName(), "moved to this room");
+                if (oldRoom != null) {
+                    notifyUsersForRoom(oldRoom, updatedEquipment.getName(), "moved from this room");
+                }
+            } else if (updatedEquipment.getRoom() != null) {
+                notifyUsersForRoom(updatedEquipment.getRoom(), updatedEquipment.getName(), "updated");
+            } else if (oldRoom != null) {
+                // If it was unassigned (e.g., if the other update endpoint was used to set room to null)
+                notifyUsersForRoom(oldRoom, updatedEquipment.getName(), "unassigned");
+            }
+
+
             response.put("Status", 1);
             response.put("Message", "Equipment updated successfully");
-            response.put("Data", updatedEquipment);
-            response.put("Token", "");
+            response.put("Data", new EquipmentResponseDTO(updatedEquipment));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            logger.error("Failed to update equipment with id {}: {}", equipmentId, e.getMessage());
             response.put("Status", 0);
             response.put("Message", "Failed to update equipment: " + e.getMessage());
             response.put("Data", "");
-            response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

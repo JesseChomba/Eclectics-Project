@@ -1,17 +1,22 @@
 package com.smartroom.allocation.controller;
 
 import com.smartroom.allocation.dto.BookingResponseDTO;
+import com.smartroom.allocation.dto.BookingUpdateDTO;
 import com.smartroom.allocation.dto.RecurringBookingRequest;
 import com.smartroom.allocation.entity.Booking;
 import com.smartroom.allocation.entity.User;
 import com.smartroom.allocation.entity.Room;
+import com.smartroom.allocation.exception.ResourceNotFoundException;
 import com.smartroom.allocation.service.BookingService;
 import com.smartroom.allocation.service.RoomService;
 import com.smartroom.allocation.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
@@ -35,46 +40,94 @@ public class BookingController {
 
     /**
      * Create a new booking
-     * @param booking Booking details
+     * @param booking Booking details (should contain roomId)
      * @param auth Authentication object (contains current user info)
      * @return Created booking in standardized format
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createBooking(@RequestBody Booking booking,
-                                                             Authentication auth) {
+    @PreAuthorize("isAuthenticated()") //only a logged in user can make a booking
+    public ResponseEntity<Map<String, Object>> createBooking(@RequestBody Booking booking, Authentication auth) {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // Validate authentication
             Optional<User> currentUser = userService.findByUsername(auth.getName());
             if (!currentUser.isPresent()) {
                 response.put("Status", 0);
                 response.put("Message", "User not found");
                 response.put("Data", "");
-                //response.put("Token", "");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            //Fetch the full Room entity using the ID provided in the booking request
+            //This is crucial to ensure roomNumber and roomName are available
+            Optional<Room> roomOpt = roomService.findById(booking.getRoom().getId());
+            if (!roomOpt.isPresent()) {
+                response.put("Status", 0);
+                response.put("Message", "Room not found with id: " + booking.getRoom().getId());
+                response.put("Data", "");
                 return ResponseEntity.badRequest().body(response);
             }
 
             booking.setUser(currentUser.get());
+            booking.setRoom(roomOpt.get()); // Set the fully fetched Room entity
+
             Booking createdBooking = bookingService.createBooking(booking);
 
             response.put("Status", 1);
             response.put("Message", "Booking created successfully");
-            response.put("Data", new BookingResponseDTO(createdBooking));
-            //response.put("Token", "");
+            response.put("Data", new BookingResponseDTO(createdBooking)); // Now DTO will have room details
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             response.put("Status", 0);
             response.put("Message", e.getMessage());
             response.put("Data", "");
-            //response.put("Token", "");
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("Status", 0);
             response.put("Message", "Failed to create booking: " + e.getMessage());
             response.put("Data", "");
-            //response.put("Token", "");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+        // Validate room ID in the booking(old code starts here)
+//            if (booking.getRoom() == null || booking.getRoom().getId() == null) {
+//                response.put("Status", 0);
+//                response.put("Message", "Room ID is required");
+//                response.put("Data", "");
+//                return ResponseEntity.badRequest().body(response);
+//            }
+//
+//            // Retrieve the Room object from the database
+//            Optional<Room> roomOpt = roomService.findById(booking.getRoom().getId());
+//            if (!roomOpt.isPresent()) {
+//                response.put("Status", 0);
+//                response.put("Message", "Room not found with ID: " + booking.getRoom().getId());
+//                response.put("Data", "");
+//                return ResponseEntity.badRequest().body(response);
+//            }
+//
+//            // Set the user and room on the booking
+//            booking.setUser(currentUser.get());
+//            booking.setRoom(roomOpt.get());
+//
+//            // Create the booking
+//            Booking createdBooking = bookingService.createBooking(booking);
+//
+//            response.put("Status", 1);
+//            response.put("Message", "Booking created successfully");
+//            response.put("Data", new BookingResponseDTO(createdBooking));
+//            return ResponseEntity.ok(response);
+//        } catch (IllegalArgumentException e) {
+//            response.put("Status", 0);
+//            response.put("Message", e.getMessage());
+//            response.put("Data", "");
+//            return ResponseEntity.badRequest().body(response);
+//        } catch (Exception e) {
+//            response.put("Status", 0);
+//            response.put("Message", "Failed to create booking: " + e.getMessage());
+//            response.put("Data", "");
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
     }
     /*
      * ADDED: Create a new recurring booking for a semester.
@@ -82,6 +135,7 @@ public class BookingController {
      * @param auth The authentication object for the current user.
      * @return  A list of Created bookings or an error message*/
     @PostMapping("/recurring")
+    @PreAuthorize("isAuthenticated()") //only a user can make a recurring booking
     public ResponseEntity<Map<String, Object>> createRecurringBooking(@RequestBody RecurringBookingRequest request,
                                                                       Authentication auth) {
         Map<String, Object> response = new HashMap<>();
@@ -150,6 +204,44 @@ public class BookingController {
             response.put("Status", 0);
             response.put("Message", "Error: " + e.getMessage());
             response.put("Data", "");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Endpoint to update an existing booking.
+     * A user can only update their own future bookings.*/
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()") // Or hasRole('USER')
+    public ResponseEntity<Map<String, Object>> updateBooking(@PathVariable Long id, @Valid @RequestBody BookingUpdateDTO updateDTO) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        try {
+            BookingResponseDTO updatedBookingDTO = bookingService.updateBooking(id, updateDTO, username);
+            response.put("Status", 1);
+            response.put("Message", "Booking updated successfully");
+            response.put("Data", updatedBookingDTO);
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            response.put("Data", null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (SecurityException e) {
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            response.put("Data", null);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        } catch (IllegalArgumentException e) {
+            response.put("Status", 0);
+            response.put("Message", e.getMessage());
+            response.put("Data", null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "An unexpected error occurred: " + e.getMessage());
+            response.put("Data", null);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

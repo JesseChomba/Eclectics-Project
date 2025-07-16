@@ -46,4 +46,13 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             "OR (b.startTime >= :startTime AND b.endTime <= :endTime)))")
     List<Room> findAvailableRooms(@Param("startTime") LocalDateTime startTime,
                                   @Param("endTime") LocalDateTime endTime);
+
+    //AdminDashboard: Count all rooms
+    long count();
+
+    //AdminDashboard: Count all rooms with status AVAILABLE
+    long countByStatus(RoomStatus status);
+
+    //AdminDashboard: Count all active rooms
+    long countByActiveTrue();
 }

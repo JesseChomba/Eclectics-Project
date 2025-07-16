@@ -22,7 +22,7 @@ public class EquipmentResponseDTO {
         this.name = equipment.getName();
         this.type = equipment.getType();
         this.description = equipment.getDescription();
-        this.working = equipment.isWorking();
+        this.working = equipment.getWorking();
         this.roomId = equipment.getRoom() != null ? equipment.getRoom().getId() : null;
         this.roomNumber = equipment.getRoom() != null ? equipment.getRoom().getRoomNumber() : null;
     }

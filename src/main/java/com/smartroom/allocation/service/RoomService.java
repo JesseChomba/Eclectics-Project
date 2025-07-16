@@ -1,19 +1,26 @@
 package com.smartroom.allocation.service;
 
+import com.smartroom.allocation.dto.RoomResponseDTO;
 import com.smartroom.allocation.entity.Room;
 import com.smartroom.allocation.entity.RoomStatus;
+import com.smartroom.allocation.repository.BookingRepository;
 import com.smartroom.allocation.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired NotificationService notificationService;
+
+    @Autowired BookingRepository bookingRepository;
 
     /**
      * Get all active rooms
@@ -90,9 +97,12 @@ public class RoomService {
 
     /**
      * Update room details
+     * Only updates non-null fields from the roomUpdate object to
+     * prevent accidentally nullifying existing data
      * @param id Room ID
      * @param roomUpdate Room details to update
      * @return Updated room
+     * @throws IllegalArgumentException if room not found or number already exists
      */
     public Room updateRoom(Long id, Room roomUpdate) {
         Optional<Room> roomOpt = roomRepository.findById(id);
@@ -101,23 +111,58 @@ public class RoomService {
         }
 
         Room existingRoom = roomOpt.get();
-        // Check if room number is being updated and if it already exists
-        if (!existingRoom.getRoomNumber().equals(roomUpdate.getRoomNumber()) &&
-                roomRepository.existsByRoomNumber(roomUpdate.getRoomNumber())) {
-            throw new IllegalArgumentException("Room number already exists");
+
+        // Conditionally update roomNumber, checking for uniqueness only if it's being changed
+        if (roomUpdate.getRoomNumber() != null && !existingRoom.getRoomNumber().equals(roomUpdate.getRoomNumber())) {
+            if (roomRepository.existsByRoomNumber(roomUpdate.getRoomNumber())) {
+                throw new IllegalArgumentException("Room number already exists: " + roomUpdate.getRoomNumber());
+            }
+            existingRoom.setRoomNumber(roomUpdate.getRoomNumber());
         }
 
-        existingRoom.setRoomNumber(roomUpdate.getRoomNumber());
-        existingRoom.setName(roomUpdate.getName());
-        existingRoom.setCapacity(roomUpdate.getCapacity());
-        existingRoom.setBuilding(roomUpdate.getBuilding());
-        existingRoom.setFloor(roomUpdate.getFloor());
-        existingRoom.setLocation(roomUpdate.getLocation());
-        existingRoom.setRoomType(roomUpdate.getRoomType());
-        existingRoom.setStatus(roomUpdate.getStatus());
-        existingRoom.setActive(roomUpdate.isActive());
+        // Conditionally update other fields
+        if (roomUpdate.getName() != null) {
+            existingRoom.setName(roomUpdate.getName());
+        }
+        // Now that 'capacity' is an Integer wrapper, it can be null if not present in JSON.
+        if (roomUpdate.getCapacity() != null) {
+            existingRoom.setCapacity(roomUpdate.getCapacity());
+        }
+        if (roomUpdate.getBuilding() != null) {
+            existingRoom.setBuilding(roomUpdate.getBuilding());
+        }
+        if (roomUpdate.getFloor() != null) {
+            existingRoom.setFloor(roomUpdate.getFloor());
+        }
+        if (roomUpdate.getLocation() != null) {
+            existingRoom.setLocation(roomUpdate.getLocation());
+        }
+        if (roomUpdate.getRoomType() != null) {
+            existingRoom.setRoomType(roomUpdate.getRoomType());
+        }
+        if (roomUpdate.getStatus() != null) {
+            existingRoom.setStatus(roomUpdate.getStatus());
+        }
+        // Now that 'active' is a Boolean wrapper, it can be null if not present in JSON.
+        if (roomUpdate.isActive() != null) {
+            existingRoom.setActive(roomUpdate.isActive());
+        }
+        //return roomRepository.save(existingRoom);
+        //notify users with upcoming bookings
+        Room updatedRoom= roomRepository.save(existingRoom);
+        // Notify users with upcoming bookings
+        List<String> recipientEmails = bookingRepository.findAll()
+                .stream()
+                .filter(booking -> booking.getRoom().getId().equals(updatedRoom.getId()))
+                .filter(booking -> booking.getEndTime().isAfter(LocalDateTime.now()))
+                .map(booking -> booking.getUser().getEmail())
+                .distinct()
+                .collect(Collectors.toList());
+        if (!recipientEmails.isEmpty()) {
+            notificationService.sendRoomUpdateNotification(updatedRoom, recipientEmails);
+        }
 
-        return roomRepository.save(existingRoom);
+        return updatedRoom;
     }
 
     /**

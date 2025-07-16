@@ -21,7 +21,7 @@ public class Room {
     private String name;
 
     @Min(value = 1, message = "Capacity must be at least 1")
-    private int capacity;
+    private Integer capacity; //changed 'int' to 'Integer' for capacity
 
     private String building;
     private String floor;
@@ -33,7 +33,7 @@ public class Room {
     @Enumerated(EnumType.STRING)
     private RoomStatus status = RoomStatus.AVAILABLE;
 
-    private boolean active = true;
+    private Boolean active = true;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
@@ -48,7 +48,7 @@ public class Room {
     public Room(String roomNumber, String name, int capacity, String building, String floor, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.name = name;
-        this.capacity = capacity;
+        this.capacity = capacity;  //this contructor still takes int for backwards compatibility
         this.building = building;
         this.floor = floor;
         this.roomType = roomType;
@@ -63,8 +63,9 @@ public class Room {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public int getCapacity() { return capacity; }
-    public void setCapacity(int capacity) { this.capacity = capacity; }
+    //updated setter and getters for Capacity..changed int to Integer
+    public Integer getCapacity() { return capacity; }
+    public void setCapacity(Integer capacity) { this.capacity = capacity; }
 
     public String getBuilding() { return building; }
     public void setBuilding(String building) { this.building = building; }
@@ -81,8 +82,9 @@ public class Room {
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    //changed getters and setters to include Boolean from boolean
+    public Boolean isActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public List<Equipment> getEquipment() { return equipment; }
     public void setEquipment(List<Equipment> equipment) { this.equipment = equipment; }
