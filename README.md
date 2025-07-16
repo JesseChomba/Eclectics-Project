@@ -12,11 +12,24 @@ The Smart Room Allocation System is a Spring Boot application designed to manage
 *   **Booking Management:**
     *   Authenticated users can create bookings for available rooms.
     *   Users can view their own bookings.
+    * Users can *update their own future bookings*,with validation to present changes to past or ongoing bookings
     *   Users can cancel their bookings.
     *   Functionality to view upcoming bookings for a specific room.
-*   **Equipment Management:**
+    * *Enhanced Email notifications*:Automated emails for booking confirmations,cancellations,providing clear details(including room number/name)
+*   **Equipment(Learning Resource) Management:**
     *   Administrators can add and manage equipment associated with rooms.
     *   Users can view equipment available in rooms.
+*   **User Management:**
+    *   Administrators can manage user accounts, including updating *some user details(supporting partial details)
+    *   User data returned via API endpoints is handled securely using Data Transfer Objects (DTOs) to prevent exposure of sensitive information like passwords.
+*   **AdminDashboard Analytics:**
+    *   A dedicated API endpoint (`/api/admin/dashboard/stats`) provides aggregated system statistics for administrators, including:
+          *  TotalBookings ever made
+          * Total available rooms.
+          * Total active rooms.
+          * Total upcoming bookings.
+          * Total active users.
+    * **API Consistency:** Standardized JSON response format (`Status`,`Message`,`Data`) across various endpoints for better predictability and ease of integration
 *   **Notifications:** Email notifications for booking confirmations and cancellations.
 
 **Note:** This system includes gamification features (like points and leaderboards) which are not covered in this setup guide and can be disregarded for basic operational setup.
