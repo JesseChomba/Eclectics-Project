@@ -59,4 +59,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'CONFIRMED' and b.startTime > :currentTime")
     long countUpcomingBookings(@Param("currentTime") LocalDateTime currentTime);
 
+    /**
+     * Finds confirmed bookings whose end time has passed and are not yet completed or cancelled
+     * @param currentTime The current time to compare against booking end times.
+     * @return A list of bookings that should be marked as COMPLETED.
+     * */
+    @Query("SELECT b FROM Booking b WHERE b.status = 'CONFIRMED' AND b.endTime < :currentTime")
+    List<Booking> findConfirmedBookingsEndedBefore(@Param("currentTime") LocalDateTime currentTime);
 }

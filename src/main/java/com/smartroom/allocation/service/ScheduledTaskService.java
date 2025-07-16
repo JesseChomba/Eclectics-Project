@@ -29,6 +29,9 @@ public class ScheduledTaskService {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
+    private BookingService bookingService;
+
     /**
      * Delete cancelled bookings older than 30 days.
      * Runs daily at midnight.
@@ -88,5 +91,22 @@ public class ScheduledTaskService {
         }
 
         logger.info("Completed room status update task");
+    }
+
+    /**
+     * Scheduled task to update booking statuses to COMPLETED.
+     * Runs every 5 minutes (300000 milliseconds).
+     * This calls the logic residing in BookingService.
+     */
+    @Scheduled(fixedRate = 300000) // Runs every 5 minutes
+    // @Scheduled(cron = "0 0 * * * ?") // Example: Runs at the top of every hour
+    public void updateCompletedBookingsScheduled() {
+        logger.info("Starting scheduled task to update booking statuses to COMPLETED...");
+        try {
+            bookingService.updateCompletedBookingsStatus(); // Call the method in BookingService
+            logger.info("Finished scheduled task to update booking statuses.");
+        } catch (Exception e) {
+            logger.error("Error during scheduled booking status update: {}", e.getMessage(), e);
+        }
     }
 }

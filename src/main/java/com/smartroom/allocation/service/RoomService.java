@@ -68,6 +68,13 @@ public class RoomService {
     }
 
     /**
+     * Get all rooms that are currently available (status = AVAILABLE).
+     * @return List of available rooms.
+     */
+    public List<Room> getAvailableRoomsNow() {
+        return roomRepository.findByStatus(RoomStatus.AVAILABLE);
+    }
+    /**
      * Update room status
      * @param roomId Room ID
      * @param status New status

@@ -258,6 +258,26 @@ public class BookingService {
     }
 
     /**
+     * Fetches and updates the status of bookings that have ended.
+     * This method is intended to be called by a scheduled task.
+     */
+    @Transactional
+    public void updateCompletedBookingsStatus() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> bookingsToComplete = bookingRepository.findConfirmedBookingsEndedBefore(now);
+
+        for (Booking booking : bookingsToComplete) {
+            booking.setStatus(BookingStatus.COMPLETED);
+            bookingRepository.save(booking);
+            // Optionally, you could send a notification here, but usually not needed for auto-completion
+        }
+        // Log the number of bookings updated
+        // This logging is typically done in the scheduled task itself, but can be here too.
+        if (!bookingsToComplete.isEmpty()) {
+            System.out.printf("Updated %d bookings to COMPLETED status.%n", bookingsToComplete.size());
+        }
+    }
+    /**
      * Get all bookings for a user
      * @param user User to get bookings for
      * @return List of user's bookings

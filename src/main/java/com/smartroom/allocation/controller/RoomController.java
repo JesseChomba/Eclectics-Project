@@ -98,6 +98,32 @@ public class RoomController {
     }
 
     /**
+     * Get all rooms that are currently available (Status = AVAILABLE).
+     * Accessible by any authenticated user
+     * @return ResponseEntity with standardized JSON response containing a list of available rooms
+     * */
+    @GetMapping("/available-now")
+    @PreAuthorize("isAuthenticated()") // Accessible to any authenticated user
+    public ResponseEntity<Map<String, Object>> getAvailableRoomsNow() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Room> availableRooms = roomService.getAvailableRoomsNow();
+            // Map these to a RoomResponseDTO to control exposed fields
+            List<RoomResponseDTO> roomDTOs =availableRooms.stream()
+                    .map(RoomResponseDTO::new)
+                    .collect(Collectors.toList());
+            response.put("Status", 1);
+            response.put("Message", "Currently available rooms retrieved successfully");
+            response.put("Data", roomDTOs);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("Status", 0);
+            response.put("Message", "Failed to retrieve available rooms: " + e.getMessage());
+            response.put("Data", null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    /**
      * Get available rooms for a specific time period
      * @param startTime Start time (format: yyyy-MM-dd'T'HH:mm:ss)
      * @param endTime End time (format: yyyy-MM-dd'T'HH:mm:ss)
@@ -150,6 +176,7 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
 
     /**
      * Search rooms by minimum capacity
