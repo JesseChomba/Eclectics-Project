@@ -9,7 +9,7 @@ import java.time.LocalTime;
  * Defines the request payload structure.
  */
 public class RecurringBookingRequest {
-    private String roomNumber;
+    private Long roomId; //changed from roomNumber
     private LocalDate semesterStartDate;
     private LocalDate semesterEndDate;
     private DayOfWeek dayOfWeek;
@@ -22,8 +22,8 @@ public class RecurringBookingRequest {
     private int intervalWeeks = 1;
 
     // Getters and Setters
-    public String getRoomNumber() { return roomNumber; }
-    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
+    public Long getRoomId() { return roomId; }
+    public void setRoomId(Long roomId) { this.roomId = roomId; }
 
     public LocalDate getSemesterStartDate() { return semesterStartDate; }
     public void setSemesterStartDate(LocalDate semesterStartDate) { this.semesterStartDate = semesterStartDate; }

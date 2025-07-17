@@ -85,8 +85,9 @@ public class BookingService {
      */
     @Transactional
     public List<Booking> createRecurringBookings(RecurringBookingRequest request, User user) {
-        Room room = roomRepository.findByRoomNumber(request.getRoomNumber())
-                .orElseThrow(() -> new IllegalArgumentException("Room with number " + request.getRoomNumber() + " not found."));
+        //UPDATED: Fetch room by ID instead of room number
+        Room room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("Room with ID " + request.getRoomId() + " not found."));
 
         List<Booking> newBookings = new ArrayList<>();
         String recurringGroupId = UUID.randomUUID().toString();
