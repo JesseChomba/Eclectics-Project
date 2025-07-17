@@ -61,14 +61,19 @@ public class NotificationService {
 
             message.setSubject("Room Booking Confirmation - " + booking.getRoom().getRoomNumber());
             message.setText(String.format(
-                    "Dear %s,\n\n" +
-                            "Your room booking has been confirmed:\n\n" +
-                            "Room: %s (%s)\n" +
-                            "Date & Time: %s to %s\n" +
-                            "Purpose: %s\n\n" +
-                            "Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Your room booking has been confirmed:
+                            
+                            Room: %s (%s)
+                            Date & Time: %s to %s
+                            Purpose: %s
+                            
+                            Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     //booking.getUser().getFullName(),
                     userName,
                     //booking.getRoom().getRoomNumber(),
@@ -98,21 +103,25 @@ public class NotificationService {
         message.setTo(newBooking.getUser().getEmail());
         message.setSubject("Booking Updated: " +newBooking.getRoom().getName());
         String text = String.format (
-                "Dear %s,\n\n" +
-                        "Your booking details for room %s have been updated.\n\n"+
-                        "Original Details:\n" +
-                        "   Room:   %s\n"+
-                        "   Start Time: %s\n"+
-                        "   End Time:   %s\n"+
-                        "   Purpose:    %s\n"+
-                        "New Details:\n"+
-                        "   Room:   %s\n"+
-                        "   Start Time: %s\n"+
-                        "   End Time:   %s\n"+
-                        "   Purpose:    %s\n"+
-                        "Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.\n\n" +
-                        "Best regards,\n" +
-                        "Smart Room Allocation System",
+                """
+                        Dear %s,
+                        
+                        Your booking details for room %s have been updated.
+                        
+                        Original Details:
+                           Room:   %s
+                           Start Time: %s
+                           End Time:   %s
+                           Purpose:    %s
+                        New Details:
+                           Room:   %s
+                           Start Time: %s
+                           End Time:   %s
+                           Purpose:    %s
+                        Please arrive on time. If you need to cancel, please do so at least 30 minutes before the start time.
+                        
+                        Best regards,
+                        Smart Room Allocation System""",
                 newBooking.getUser().getFullName(),
                 oldBooking.getRoom().getRoomNumber(),
                 oldBooking.getRoom().getName(),
@@ -160,16 +169,21 @@ public class NotificationService {
             // Construct the summary email
             String subject = String.format("Recurring Booking Summary for Room %s", room.getRoomNumber());
             String body = String.format(
-                    "Dear %s,\n\n" +
-                            "Your recurring room booking has been confirmed. Details are as follows:\n\n" +
-                            "Room: %s (%s)\n" +
-                            "Time: %s to %s\n" +
-                            "Purpose: %s\n\n" +
-                            "This booking will recur on the following dates:\n" +
-                            "%s\n" +
-                            "Please note that each of these is a separate booking. If you need to cancel a single day, you can do so from your bookings list without affecting the rest of the series.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Your recurring room booking has been confirmed. Details are as follows:
+                            
+                            Room: %s (%s)
+                            Time: %s to %s
+                            Purpose: %s
+                            
+                            This booking will recur on the following dates:
+                            %s
+                            Please note that each of these is a separate booking. If you need to cancel a single day, you can do so from your bookings list without affecting the rest of the series.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     user.getFullName(),
                     room.getRoomNumber(),
                     room.getName(),
@@ -202,14 +216,19 @@ public class NotificationService {
             message.setTo(booking.getUser().getEmail());
             message.setSubject("Room Booking Cancelled - " + booking.getRoom().getRoomNumber());
             message.setText(String.format(
-                    "Dear %s,\n\n" +
-                            "Your room booking has been cancelled:\n\n" +
-                            "Room: %s (%s)\n" +
-                            "Date & Time: %s to %s\n" +
-                            "Purpose: %s\n\n" +
-                            "The room is now available for other bookings.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Your room booking has been cancelled:
+                            
+                            Room: %s (%s)
+                            Date & Time: %s to %s
+                            Purpose: %s
+                            
+                            The room is now available for other bookings.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     booking.getUser().getFullName(),
                     booking.getRoom().getRoomNumber(),
                     booking.getRoom().getName(),
@@ -233,17 +252,23 @@ public class NotificationService {
             message.setTo(user.getEmail());
             message.setSubject("Welcome to Smart Room Allocation System!");
             message.setText(String.format(
-                    "Dear %s,\n\n" +
-                            "Welcome to the Smart Room Allocation System! We're excited to have you on board.\n\n" +
-                            "Your Account Details:\n" +
-                            "Username: %s\n" +
-                            "Full Name: %s\n" +
-                            "Role: %s\n" +
-                            "Department: %s\n\n" +
-                            "You can now book rooms for your meetings, classes, or events. Visit our platform to explore available rooms and start booking.\n\n" +
-                            "If you have any questions, feel free to contact our support team.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Welcome to the Smart Room Allocation System! We're excited to have you on board.
+                            
+                            Your Account Details:
+                            Username: %s
+                            Full Name: %s
+                            Role: %s
+                            Department: %s
+                            
+                            You can now book rooms for your meetings, classes, or events. Visit our platform to explore available rooms and start booking.
+                            
+                            If you have any questions, feel free to contact our support team.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     user.getFullName(),
                     user.getUsername(),
                     user.getFullName(),
@@ -267,17 +292,23 @@ public class NotificationService {
             message.setTo(user.getEmail());
             message.setSubject("Smart Room Allocation System - Account Deletion Confirmation");
             message.setText(String.format(
-                    "Dear %s,\n\n" +
-                            "Your account with the Smart Room Allocation System has been successfully deleted.\n\n" +
-                            "Account Details:\n" +
-                            "Username: %s\n" +
-                            "Full Name: %s\n" +
-                            "Role: %s\n" +
-                            "Department: %s\n\n" +
-                            "All your data has been removed from our system. If you change your mind, you can register again at any time.\n\n" +
-                            "Thank you for using our service. If you have any feedback, please feel free to share it with us.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Your account with the Smart Room Allocation System has been successfully deleted.
+                            
+                            Account Details:
+                            Username: %s
+                            Full Name: %s
+                            Role: %s
+                            Department: %s
+                            
+                            All your data has been removed from our system. If you change your mind, you can register again at any time.
+                            
+                            Thank you for using our service. If you have any feedback, please feel free to share it with us.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     user.getFullName(),
                     user.getUsername(),
                     user.getFullName(),
@@ -303,24 +334,30 @@ public class NotificationService {
             message.setTo(user.getEmail());
             message.setSubject("Smart Room Allocation System - Account Update Notification");
             message.setText(String.format(
-                    "Dear %s,\n\n" +
-                            "Your account details in the Smart Room Allocation System have been updated.\n\n" +
-                            "Updated Account Details:\n" +
-                            "Username: %s\n" +
-                            "Full Name: %s\n" +
-                            "Email: %s\n" +
-                            "Role: %s\n" +
-                            "Department: %s\n" +
-                            "Active Status: %s\n\n" +
-                            "If you did not request these changes, please contact our support team immediately.\n\n" +
-                            "Best regards,\n" +
-                            "Smart Room Allocation System",
+                    """
+                            Dear %s,
+                            
+                            Your account details in the Smart Room Allocation System have been updated.
+                            
+                            Updated Account Details:
+                            Username: %s
+                            Full Name: %s
+                            Email: %s
+                            Role: %s
+                            Department: %s
+                            Active Status: %s
+                            
+                            If you did not request these changes, please contact our support team immediately.
+                            
+                            Best regards,
+                            Smart Room Allocation System""",
                     user.getFullName(),
                     user.getUsername(),
+                    user.getFullName(),
                     user.getEmail(),
                     user.getRole().toString(),
                     user.getDepartment() != null ? user.getDepartment() : "Not specified",
-                    user.isActive() ? "Active" : "Inactive"
+                    user.getActive() !=null && user.getActive() ? "Active" : "Inactive"
             ));
 
             mailSender.send(message);
@@ -342,21 +379,26 @@ public class NotificationService {
                 message.setTo(email);
                 message.setSubject("Smart Room Allocation System - Room Update Notification");
                 message.setText(String.format(
-                        "Dear User,\n\n" +
-                                "The details of a room you have booked have been updated.\n\n" +
-                                "Updated Room Details:\n" +
-                                "Room Number: %s\n" +
-                                "Name: %s\n" +
-                                "Building: %s\n" +
-                                "Floor: %s\n" +
-                                "Location: %s\n" +
-                                "Room Type: %s\n" +
-                                "Capacity: %d\n" +
-                                "Status: %s\n" +
-                                "Active: %s\n\n" +
-                                "Please review your upcoming bookings to ensure this room still meets your needs.\n\n" +
-                                "Best regards,\n" +
-                                "Smart Room Allocation System",
+                        """
+                                Dear User,
+                                
+                                The details of a room you have booked have been updated.
+                                
+                                Updated Room Details:
+                                Room Number: %s
+                                Name: %s
+                                Building: %s
+                                Floor: %s
+                                Location: %s
+                                Room Type: %s
+                                Capacity: %d
+                                Status: %s
+                                Active: %s
+                                
+                                Please review your upcoming bookings to ensure this room still meets your needs.
+                                
+                                Best regards,
+                                Smart Room Allocation System""",
                         room.getRoomNumber(),
                         room.getName(),
                         room.getBuilding() != null ? room.getBuilding() : "Not specified",
