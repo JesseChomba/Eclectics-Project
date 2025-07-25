@@ -3,10 +3,7 @@ package com.smartroom.allocation.service;
 import com.smartroom.allocation.dto.BookingResponseDTO;
 import com.smartroom.allocation.dto.BookingUpdateDTO;
 import com.smartroom.allocation.dto.RecurringBookingRequest;
-import com.smartroom.allocation.entity.Booking;
-import com.smartroom.allocation.entity.BookingStatus;
-import com.smartroom.allocation.entity.Room;
-import com.smartroom.allocation.entity.User;
+import com.smartroom.allocation.entity.*;
 import com.smartroom.allocation.exception.ResourceNotFoundException;
 import com.smartroom.allocation.repository.BookingRepository;
 import com.smartroom.allocation.repository.RoomRepository;
@@ -259,6 +256,25 @@ public class BookingService {
     }
 
     /**
+     * Delete a booking by ID.
+     * @param bookingId The ID of the booking to delete.
+     * @param username The username of the currently authenticated user.
+     * @return true if deleted, false otherwise.
+     */
+    public boolean deleteBookingById(Long bookingId, String username) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            // Admins can delete any booking, but users can only delete their own.
+            if (!booking.getUser().getUsername().equals(username) && !userService.findByUsername(username).get().getRole().equals(UserRole.ADMIN)) {
+                throw new SecurityException("You do not have permission to delete this booking.");
+            }
+            bookingRepository.deleteById(bookingId);
+            return true;
+        }
+        return false;
+    }
+    /**
      * Fetches and updates the status of bookings that have ended.
      * This method is intended to be called by a scheduled task.
      */
@@ -284,7 +300,8 @@ public class BookingService {
      * @return List of user's bookings
      */
     public List<Booking> getUserBookings(User user) {
-        return bookingRepository.findByUser(user);
+
+        return bookingRepository.findByUserAndStatus(user,BookingStatus.CONFIRMED);
     }
 
     /**
@@ -292,6 +309,7 @@ public class BookingService {
      * @return List of current bookings
      */
     public List<Booking> getCurrentBookings() {
+        //Only return CONFIRMED bookings for "my bookings" view
         return bookingRepository.findCurrentBookings(LocalDateTime.now());
     }
 

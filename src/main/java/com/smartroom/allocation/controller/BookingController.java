@@ -253,25 +253,34 @@ public class BookingController {
      * @return Updated booking
      */
     @PutMapping("/{bookingId}/cancel")
-    public ResponseEntity<Booking> cancelBooking(@PathVariable Long bookingId,
-                                                 Authentication auth) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String,Object>> cancelBooking(@PathVariable Long bookingId,   //changed return type
+                                                            Authentication auth) {
         Map<String, Object> response = new HashMap<>();
         try {
             Optional<User> currentUser = userService.findByUsername(auth.getName());
             if (!currentUser.isPresent()) {
                 response.put("Status",0);
-                response.put("Message","Bad request");
-                response.put("Data","");
-                return ResponseEntity.badRequest().build();
+                response.put("Message","Authentication Required: User not found.");
+                response.put("Data",null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);  //Return a 401 unauthorized
             }
 
             Booking cancelledBooking = bookingService.cancelBooking(bookingId, currentUser.get().getId());
             response.put("Status",1);
             response.put("Message","Booking cancelled successfully");
-            response.put("Data","");
-            return ResponseEntity.ok(cancelledBooking);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            response.put("Data",new BookingResponseDTO(cancelledBooking)); //Map to DTO
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) { // Catch specific RuntimeExceptions
+            response.put("Status", 0);
+            response.put("Message", e.getMessage()); // Use the exception message
+            response.put("Data", null);
+            return ResponseEntity.badRequest().body(response); // Return 400 Bad Request
+        } catch (Exception e) { // Catch any other unexpected exceptions
+            response.put("Status", 0);
+            response.put("Message", "Failed to cancel booking: " + e.getMessage());
+            response.put("Data", null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); // Return 500 Internal Server Error
         }
     }
 
