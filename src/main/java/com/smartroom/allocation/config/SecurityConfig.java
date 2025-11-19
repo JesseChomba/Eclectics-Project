@@ -34,14 +34,16 @@ public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                          JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000","https://eclectis-smartroom-allocation.vercel.app")); // allow your frontend origin
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173",
+                "https://eclectis-smartroom-allocation.vercel.app")); // allow your frontend origin
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // Optional: allow cookies/auth headers if needed
@@ -55,16 +57,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors ->cors.configurationSource(corsConfigurationSource())) // Use CORS config directly
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Use CORS config directly
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)  //Handles 401 for Unauthenticated users
-                        //old .accessDeniedHandler
-//                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-//                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Insufficient permissions");
-//                        }))
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // Handles 401 for Unauthenticated users
+                        // old .accessDeniedHandler
+                        // .accessDeniedHandler((request, response, accessDeniedException) -> {
+                        // response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied:
+                        // Insufficient permissions");
+                        // }))
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            log.info("Access Denied for {}: {}", request.getRequestURI(), accessDeniedException.getMessage());
+                            log.info("Access Denied for {}: {}", request.getRequestURI(),
+                                    accessDeniedException.getMessage());
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
                             response.getWriter().write("Access Denied: Insufficient permissions");
                             response.setContentType("application/json");
@@ -74,12 +78,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
                         .requestMatchers("/api/users/me").authenticated() // Add this line
-                        .requestMatchers(HttpMethod.GET,"/api/users/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT,"/api/users/**").authenticated() //updated
-                        .requestMatchers(HttpMethod.GET,"/api/rooms/**").authenticated()
-                        .requestMatchers(HttpMethod.GET,"/api/equipment/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated() // updated
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/equipment/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/equipment").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"api/equipment/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "api/equipment/{id}").authenticated()
 
                         .anyRequest().authenticated());
 
@@ -94,7 +98,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
