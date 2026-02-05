@@ -40,7 +40,7 @@ const MyBookings = () => {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to fetch bookings");
+            toast.error(error.response?.data?.Message || "No result");
         } finally {
             setLoading(false);
         }
@@ -51,13 +51,13 @@ const MyBookings = () => {
             try {
                 const response = await bookingService.cancelBooking(id);
                 if (response.Status === 1) {
-                    toast.success("Booking cancelled successfully");
+                    toast.success(response.Message || "Booking cancelled successfully");
                     fetchBookings();
                 } else {
                     toast.error(response.Message);
                 }
             } catch (error) {
-                toast.error("Failed to cancel booking");
+                toast.error(error.response?.data?.Message || "No result");
             }
         }
     };

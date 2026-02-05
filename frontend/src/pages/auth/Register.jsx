@@ -16,6 +16,8 @@ const Register = () => {
             username: data.username,
             password: data.password,
             email: data.email,
+            fullName: data.fullName,
+            department: data.department,
             role: 'STUDENT' // Default role
         });
         if (success) {
@@ -38,6 +40,18 @@ const Register = () => {
                             id="username"
                             {...register('username', { required: 'Username is required', minLength: { value: 3, message: 'Minimum 3 characters' } })}
                             error={errors.username}
+                        />
+                        <Input
+                            label="Full Name"
+                            id="fullName"
+                            {...register('fullName', { required: 'Full name is required' })}
+                            error={errors.fullName}
+                        />
+                        <Input
+                            label="Department"
+                            id="department"
+                            {...register('department', { required: 'Department is required' })}
+                            error={errors.department}
                         />
                         <Input
                             label="Email"

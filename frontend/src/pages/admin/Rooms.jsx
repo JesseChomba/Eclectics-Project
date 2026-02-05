@@ -23,7 +23,7 @@ const Rooms = () => {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to fetch rooms");
+            toast.error(error.response?.data?.Message || "No result");
         } finally {
             setLoading(false);
         }
@@ -34,13 +34,13 @@ const Rooms = () => {
             try {
                 const response = await roomService.deleteRoom(id);
                 if (response.Status === 1) {
-                    toast.success("Room deleted successfully");
+                    toast.success(response.Message || "Room deleted successfully");
                     fetchRooms();
                 } else {
                     toast.error(response.Message);
                 }
             } catch (error) {
-                toast.error("Failed to delete room");
+                toast.error(error.response?.data?.Message || "No result");
             }
         }
     };

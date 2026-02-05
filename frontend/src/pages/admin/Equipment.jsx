@@ -23,7 +23,7 @@ const Equipment = () => {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to fetch equipment");
+            toast.error(error.response?.data?.Message || "No result");
         } finally {
             setLoading(false);
         }
@@ -34,13 +34,13 @@ const Equipment = () => {
             try {
                 const response = await equipmentService.deleteEquipment(id);
                 if (response.Status === 1) {
-                    toast.success("Equipment deleted successfully");
+                    toast.success(response.Message || "Equipment deleted successfully");
                     fetchEquipment();
                 } else {
                     toast.error(response.Message);
                 }
             } catch (error) {
-                toast.error("Failed to delete equipment");
+                toast.error(error.response?.data?.Message || "No result");
             }
         }
     };

@@ -55,14 +55,14 @@ export const AuthProvider = ({ children }) => {
                     setUser({ username, role: userData.role });
                 }
 
-                toast.success('Login successful!');
+                toast.success(response.data.Message || 'Login successful!');
                 return true;
             } else {
-                toast.error(response.data.Message || 'Login failed');
+                toast.error(response.data.Message || 'No result');
                 return false;
             }
         } catch (error) {
-            toast.error(error.response?.data?.Message || 'Login failed');
+            toast.error(error.response?.data?.Message || 'No result');
             return false;
         }
     };
@@ -71,14 +71,14 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await api.post('/api/users/register', userData);
             if (response.data.Status === 1) {
-                toast.success('Registration successful! Please login.');
+                toast.success(response.data.Message || 'Registration successful! Please login.');
                 return true;
             } else {
-                toast.error(response.data.Message || 'Registration failed');
+                toast.error(response.data.Message || 'No result');
                 return false;
             }
         } catch (error) {
-            toast.error(error.response?.data?.Message || 'Registration failed');
+            toast.error(error.response?.data?.Message || 'No result');
             return false;
         }
     }

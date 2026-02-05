@@ -20,7 +20,7 @@ const AdminDashboard = () => {
                     toast.error(response.Message);
                 }
             } catch (error) {
-                toast.error("Failed to fetch dashboard stats");
+                toast.error(error.response?.data?.Message || "No result");
             } finally {
                 setLoading(false);
             }

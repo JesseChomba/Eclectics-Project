@@ -33,7 +33,7 @@ const BookRoom = () => {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to search rooms");
+            toast.error(error.response?.data?.Message || "No result");
         } finally {
             setLoading(false);
         }
@@ -59,13 +59,13 @@ const BookRoom = () => {
 
             const response = await bookingService.createBooking(bookingData);
             if (response.Status === 1) {
-                toast.success("Booking created successfully!");
+                toast.success(response.Message || "Booking created successfully!");
                 navigate('/my-bookings');
             } else {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to create booking");
+            toast.error(error.response?.data?.Message || "No result");
         }
     };
 

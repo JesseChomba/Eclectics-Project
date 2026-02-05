@@ -21,7 +21,7 @@ const Profile = () => {
                 setUser(response.Data);
             }
         } catch (error) {
-            toast.error("Failed to fetch profile");
+            toast.error(error.response?.data?.Message || "No result");
         }
     };
 
@@ -32,13 +32,13 @@ const Profile = () => {
                 newPassword: data.newPassword
             });
             if (response.Status === 1) {
-                toast.success("Password updated successfully");
+                toast.success(response.Message || "Password updated successfully");
                 reset();
             } else {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to update password");
+            toast.error(error.response?.data?.Message || "No result");
         }
     };
 

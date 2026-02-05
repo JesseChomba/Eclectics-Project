@@ -31,7 +31,7 @@ const RoomForm = () => {
                 setValue('status', room.status);
             }
         } catch (error) {
-            toast.error("Failed to fetch room details");
+            toast.error(error.response?.data?.Message || "No result");
             navigate('/admin/rooms');
         }
     };
@@ -46,13 +46,13 @@ const RoomForm = () => {
             }
 
             if (response.Status === 1) {
-                toast.success(`Room ${isEditMode ? 'updated' : 'created'} successfully`);
+                toast.success(response.Message || `Room ${isEditMode ? 'updated' : 'created'} successfully`);
                 navigate('/admin/rooms');
             } else {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error(`Failed to ${isEditMode ? 'update' : 'create'} room`);
+            toast.error(error.response?.data?.Message || "No result");
         }
     };
 

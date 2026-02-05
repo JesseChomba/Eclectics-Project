@@ -22,7 +22,7 @@ const Users = () => {
                 toast.error(response.Message);
             }
         } catch (error) {
-            toast.error("Failed to fetch users");
+            toast.error(error.response?.data?.Message || "No result");
         } finally {
             setLoading(false);
         }
@@ -33,13 +33,13 @@ const Users = () => {
             try {
                 const response = await userService.deleteUser(id);
                 if (response.Status === 1) {
-                    toast.success("User deleted successfully");
+                    toast.success(response.Message || "User deleted successfully");
                     fetchUsers();
                 } else {
                     toast.error(response.Message);
                 }
             } catch (error) {
-                toast.error("Failed to delete user");
+                toast.error(error.response?.data?.Message || "No result");
             }
         }
     };
